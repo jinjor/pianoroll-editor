@@ -1,0 +1,13 @@
+
+
+# Elm
+elm-stuff
+
+# Node.js
+node_modules
+
+# macOS
+.DS_Store
+
+# generated
+editor.js

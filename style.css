@@ -1,0 +1,11 @@
+html, body {
+  padding: 0;
+  margin: 0;
+}
+
+.pianoroll-container {
+  overflow-y: scroll;
+  height: 300px;
+  border: solid 1px #aaa;
+  box-sizing: border-box;
+}

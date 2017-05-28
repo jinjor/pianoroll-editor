@@ -1,0 +1,15 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <link href="./style.css" rel="stylesheet">
+  <script src="./editor.js"></script>
+</head>
+
+<body>
+  <script>
+    let app = Elm.Main.fullscreen();
+    app.ports.midiOut.subscribe(data => {});
+  </script>
+</body>

@@ -1,0 +1,15 @@
+{
+  "name": "pianoroll-editor",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "elm-live src/Main.elm --output=editor.js --debug --open",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Yosuke Torii <jinjorweb@gmail.com> (https://github.com/jinjor)",
+  "license": "BSD-3-Clause",
+  "dependencies": {
+    "elm-live": "^2.7.4"
+  }
+}
