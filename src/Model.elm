@@ -11,6 +11,7 @@ type alias Model =
     , mode : Mode
     , playing : Bool
     , startTime : Time
+    , currentTime : Time
     , futureNotes : List Note
     , nextId : Int
     }
@@ -47,7 +48,7 @@ addNote createNote model =
 
 init : Model
 init =
-    Model Dict.empty 0 ArrowMode False 0 [] 1
+    Model Dict.empty 0 ArrowMode False 0 0 [] 1
         |> addNote (\id -> Note id 60 127 0 100 False)
         |> addNote (\id -> Note id 62 127 120 100 False)
         |> addNote (\id -> Note id 65 127 240 100 False)
@@ -118,3 +119,8 @@ getFutureNotes measure notes =
         notes
             |> List.filter (\note -> note.position >= from)
             |> List.sortBy .position
+
+
+getPlayingTime : Model -> Time
+getPlayingTime model =
+    model.currentTime - model.startTime

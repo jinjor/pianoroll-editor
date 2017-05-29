@@ -13190,6 +13190,7 @@ var _user$project$Msg$Key = F3(
 	function (a, b, c) {
 		return {ctrl: a, shift: b, code: c};
 	});
+var _user$project$Msg$SwitchTimeView = {ctor: 'SwitchTimeView'};
 var _user$project$Msg$SelectPenMode = {ctor: 'SelectPenMode'};
 var _user$project$Msg$SelectArrowMode = {ctor: 'SelectArrowMode'};
 var _user$project$Msg$MoveSelectedNotes = function (a) {
@@ -13224,6 +13225,9 @@ var _user$project$Midi$tickToMeasure = function (tick) {
 	return _elm_lang$core$Basics$toFloat(tick) / 480;
 };
 
+var _user$project$Model$getPlayingTime = function (model) {
+	return model.currentTime - model.startTime;
+};
 var _user$project$Model$getFutureNotes = F2(
 	function (measure, notes) {
 		var from = _user$project$Midi$measureToTick(measure);
@@ -13326,9 +13330,9 @@ var _user$project$Model$addNote = F2(
 		}(
 			_user$project$Model$genId(model));
 	});
-var _user$project$Model$Model = F7(
-	function (a, b, c, d, e, f, g) {
-		return {notes: a, currentMeasure: b, mode: c, playing: d, startTime: e, futureNotes: f, nextId: g};
+var _user$project$Model$Model = F8(
+	function (a, b, c, d, e, f, g, h) {
+		return {notes: a, currentMeasure: b, mode: c, playing: d, startTime: e, currentTime: f, futureNotes: g, nextId: h};
 	});
 var _user$project$Model$Note = F6(
 	function (a, b, c, d, e, f) {
@@ -13356,12 +13360,13 @@ var _user$project$Model$init = A2(
 				function (id) {
 					return A6(_user$project$Model$Note, id, 60, 127, 0, 100, false);
 				},
-				A7(
+				A8(
 					_user$project$Model$Model,
 					_elm_lang$core$Dict$empty,
 					0,
 					_user$project$Model$ArrowMode,
 					false,
+					0,
 					0,
 					{ctor: '[]'},
 					1)))));
@@ -13533,12 +13538,13 @@ var _user$project$Update$update = F2(
 						model,
 						A2(_elm_lang$core$Task$perform, _user$project$Msg$Start, _elm_lang$core$Time$now));
 				case 'Start':
+					var _p8 = _p5._0;
 					return A2(
 						_user$project$Core_ops['=>'],
 						_user$project$Model$prepareFutureNotes(
 							_elm_lang$core$Native_Utils.update(
 								model,
-								{playing: true, startTime: _p5._0})),
+								{playing: true, startTime: _p8, currentTime: _p8})),
 						_elm_lang$core$Platform_Cmd$none);
 				case 'Stop':
 					return A2(
@@ -13548,14 +13554,15 @@ var _user$project$Update$update = F2(
 							{playing: false}),
 						_elm_lang$core$Platform_Cmd$none);
 				case 'Tick':
-					var _p8 = A3(_user$project$Update$sendNotes, model.startTime, _p5._0, model.futureNotes);
-					var futureNotes = _p8._0;
-					var cmd = _p8._1;
+					var _p10 = _p5._0;
+					var _p9 = A3(_user$project$Update$sendNotes, model.startTime, _p10, model.futureNotes);
+					var futureNotes = _p9._0;
+					var cmd = _p9._1;
 					return A2(
 						_user$project$Core_ops['=>'],
 						_elm_lang$core$Native_Utils.update(
 							model,
-							{futureNotes: futureNotes}),
+							{currentTime: _p10, futureNotes: futureNotes}),
 						cmd);
 				case 'PrevMeasure':
 					return A2(
@@ -13595,13 +13602,15 @@ var _user$project$Update$update = F2(
 							model,
 							{mode: _user$project$Model$ArrowMode}),
 						_elm_lang$core$Platform_Cmd$none);
-				default:
+				case 'SelectPenMode':
 					return A2(
 						_user$project$Core_ops['=>'],
 						_elm_lang$core$Native_Utils.update(
 							model,
 							{mode: _user$project$Model$PenMode}),
 						_elm_lang$core$Platform_Cmd$none);
+				default:
+					return A2(_user$project$Core_ops['=>'], model, _elm_lang$core$Platform_Cmd$none);
 			}
 		}
 	});
@@ -13894,6 +13903,39 @@ var _user$project$View$viewPianoroll = function (model) {
 			_1: {ctor: '[]'}
 		});
 };
+var _user$project$View$formatTime = function (ms) {
+	var ss = A2(
+		_elm_lang$core$Basics_ops['%'],
+		_elm_lang$core$Basics$floor(ms),
+		1000);
+	var s = (_elm_lang$core$Basics$floor(ms) / 1000) | 0;
+	return A2(
+		_elm_lang$core$Basics_ops['++'],
+		_elm_lang$core$Basics$toString(s),
+		A2(
+			_elm_lang$core$Basics_ops['++'],
+			'.',
+			_elm_lang$core$Basics$toString(ss)));
+};
+var _user$project$View$viewTime = function (time) {
+	return A2(
+		_elm_lang$html$Html$div,
+		{
+			ctor: '::',
+			_0: _elm_lang$html$Html_Attributes$class('toolbar-button'),
+			_1: {
+				ctor: '::',
+				_0: _elm_lang$html$Html_Events$onClick(_user$project$Msg$SwitchTimeView),
+				_1: {ctor: '[]'}
+			}
+		},
+		{
+			ctor: '::',
+			_0: _elm_lang$html$Html$text(
+				_user$project$View$formatTime(time)),
+			_1: {ctor: '[]'}
+		});
+};
 var _user$project$View$penButton = function (selected) {
 	return A2(
 		_elm_lang$html$Html$button,
@@ -14029,7 +14071,14 @@ var _user$project$View$viewToolbar = function (model) {
 								_elm_lang$html$Html_Lazy$lazy,
 								_user$project$View$penButton,
 								_elm_lang$core$Native_Utils.eq(model.mode, _user$project$Model$PenMode)),
-							_1: {ctor: '[]'}
+							_1: {
+								ctor: '::',
+								_0: A2(
+									_elm_lang$html$Html_Lazy$lazy,
+									_user$project$View$viewTime,
+									_user$project$Model$getPlayingTime(model)),
+								_1: {ctor: '[]'}
+							}
 						}
 					}
 				}
@@ -14057,7 +14106,7 @@ var _user$project$Main$main = _elm_lang$html$Html$program(
 var Elm = {};
 Elm['Main'] = Elm['Main'] || {};
 if (typeof _user$project$Main$main !== 'undefined') {
-    _user$project$Main$main(Elm['Main'], 'Main', {"types":{"unions":{"Msg.Msg":{"args":[],"tags":{"NextMeasure":[],"Tick":["Time.Time"],"Start":["Time.Time"],"PianorollEvent":["Msg.Key"],"SelectPenMode":[],"MoveSelectedNotes":["Int"],"MouseDownOnNote":["Int","Msg.Mouse"],"SelectArrowMode":[],"Stop":[],"TriggerStart":[],"PrevMeasure":[]}}},"aliases":{"Msg.Key":{"args":[],"type":"{ ctrl : Bool, shift : Bool, code : Int }"},"Msg.Mouse":{"args":[],"type":"{ ctrl : Bool, shift : Bool }"},"Time.Time":{"args":[],"type":"Float"}},"message":"Msg.Msg"},"versions":{"elm":"0.18.0"}});
+    _user$project$Main$main(Elm['Main'], 'Main', {"types":{"unions":{"Msg.Msg":{"args":[],"tags":{"NextMeasure":[],"Tick":["Time.Time"],"Start":["Time.Time"],"PianorollEvent":["Msg.Key"],"SelectPenMode":[],"MoveSelectedNotes":["Int"],"MouseDownOnNote":["Int","Msg.Mouse"],"SelectArrowMode":[],"SwitchTimeView":[],"Stop":[],"TriggerStart":[],"PrevMeasure":[]}}},"aliases":{"Msg.Key":{"args":[],"type":"{ ctrl : Bool, shift : Bool, code : Int }"},"Msg.Mouse":{"args":[],"type":"{ ctrl : Bool, shift : Bool }"},"Time.Time":{"args":[],"type":"Float"}},"message":"Msg.Msg"},"versions":{"elm":"0.18.0"}});
 }
 
 if (typeof define === "function" && define['amd'])

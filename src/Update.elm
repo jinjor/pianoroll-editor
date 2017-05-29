@@ -59,6 +59,7 @@ update msg model =
             ({ model
                 | playing = True
                 , startTime = startTime
+                , currentTime = startTime
              }
                 |> Model.prepareFutureNotes
             )
@@ -76,7 +77,8 @@ update msg model =
                         model.futureNotes
             in
                 { model
-                    | futureNotes = futureNotes
+                    | currentTime = currentTime
+                    , futureNotes = futureNotes
                 }
                     => cmd
 
@@ -100,6 +102,9 @@ update msg model =
 
         SelectPenMode ->
             { model | mode = PenMode } => Cmd.none
+
+        SwitchTimeView ->
+            model => Cmd.none
 
 
 subscriptions : Model -> Sub Msg

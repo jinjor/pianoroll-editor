@@ -11,6 +11,7 @@ import Svg.Attributes as SA
 import PianorollView
 import Json.Decode as Decode exposing (Decoder)
 import Core exposing (..)
+import Time exposing (Time)
 
 
 view : Model -> Html Msg
@@ -29,6 +30,7 @@ viewToolbar model =
         , viewNextMeasureButton
         , lazy arrowButton (model.mode == ArrowMode)
         , lazy penButton (model.mode == PenMode)
+        , lazy viewTime (Model.getPlayingTime model)
         ]
 
 
@@ -92,6 +94,28 @@ penButton selected =
         ]
         [ text "筆"
         ]
+
+
+viewTime : Time -> Html Msg
+viewTime time =
+    div
+        [ class "toolbar-button"
+        , onClick SwitchTimeView
+        ]
+        [ text (formatTime time)
+        ]
+
+
+formatTime : Time -> String
+formatTime ms =
+    let
+        s =
+            floor ms // 1000
+
+        ss =
+            floor ms % 1000
+    in
+        toString s ++ "." ++ toString ss
 
 
 viewPianoroll : Model -> Html Msg
