@@ -29,6 +29,18 @@ update msg model =
                 _ ->
                     model => Cmd.none
 
+        Start ->
+            { model | playing = True } => Cmd.none
+
+        Stop ->
+            { model | playing = False } => Cmd.none
+
+        PrevMeasure ->
+            { model | currentMeasure = model.currentMeasure - 1 } => Cmd.none
+
+        NextMeasure ->
+            { model | currentMeasure = model.currentMeasure + 1 } => Cmd.none
+
 
 subscriptions : Model -> Sub Msg
 subscriptions model =

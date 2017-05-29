@@ -5,6 +5,8 @@ import Dict exposing (Dict)
 
 type alias Model =
     { notes : Dict Int Note
+    , currentMeasure : Int
+    , playing : Bool
     }
 
 
@@ -36,8 +38,10 @@ initialNotes =
 
 init : Model
 init =
-    Model <|
+    Model
         (initialNotes |> List.indexedMap (,) |> Dict.fromList)
+        0
+        False
 
 
 getNotes : Model -> List Note

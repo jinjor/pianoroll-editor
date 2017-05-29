@@ -13,11 +13,63 @@ import Json.Decode as Decode exposing (Decoder)
 
 view : Model -> Html Msg
 view model =
-    div [] [ pianorollView model ]
+    div []
+        [ viewToolbar model
+        , viewPianoroll model
+        ]
 
 
-pianorollView : Model -> Html Msg
-pianorollView model =
+viewToolbar : Model -> Html Msg
+viewToolbar model =
+    div [ class "toolbar" ]
+        [ viewPrevMeasureButton
+        , viewPlayButton model.playing
+        , viewNextMeasureButton
+        ]
+
+
+viewPrevMeasureButton : Html Msg
+viewPrevMeasureButton =
+    button
+        [ class "toolbar-button"
+        , onClick PrevMeasure
+        ]
+        [ text "前"
+        ]
+
+
+viewPlayButton : Bool -> Html Msg
+viewPlayButton playing =
+    button
+        [ class "toolbar-button"
+        , onClick
+            (if playing then
+                Stop
+             else
+                Start
+            )
+        ]
+        [ text
+            (if playing then
+                "停止"
+             else
+                "再生"
+            )
+        ]
+
+
+viewNextMeasureButton : Html Msg
+viewNextMeasureButton =
+    button
+        [ class "toolbar-button"
+        , onClick NextMeasure
+        ]
+        [ text "後"
+        ]
+
+
+viewPianoroll : Model -> Html Msg
+viewPianoroll model =
     div
         [ class "pianoroll-container"
         , tabindex 1

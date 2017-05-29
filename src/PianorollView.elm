@@ -17,7 +17,7 @@ view model =
         [ g []
             [ viewHorizotalNoteLines
             , viewVerticalMeasureLines
-            , viewNotes 0 (Model.getNotes model)
+            , viewNotes model.currentMeasure (Model.getNotes model)
             ]
         ]
 
