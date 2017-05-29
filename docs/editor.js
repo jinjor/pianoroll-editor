@@ -5274,6 +5274,221 @@ var _elm_lang$core$Dict$diff = F2(
 			t2);
 	});
 
+//import Native.Scheduler //
+
+var _elm_lang$core$Native_Time = function() {
+
+var now = _elm_lang$core$Native_Scheduler.nativeBinding(function(callback)
+{
+	callback(_elm_lang$core$Native_Scheduler.succeed(Date.now()));
+});
+
+function setInterval_(interval, task)
+{
+	return _elm_lang$core$Native_Scheduler.nativeBinding(function(callback)
+	{
+		var id = setInterval(function() {
+			_elm_lang$core$Native_Scheduler.rawSpawn(task);
+		}, interval);
+
+		return function() { clearInterval(id); };
+	});
+}
+
+return {
+	now: now,
+	setInterval_: F2(setInterval_)
+};
+
+}();
+var _elm_lang$core$Time$setInterval = _elm_lang$core$Native_Time.setInterval_;
+var _elm_lang$core$Time$spawnHelp = F3(
+	function (router, intervals, processes) {
+		var _p0 = intervals;
+		if (_p0.ctor === '[]') {
+			return _elm_lang$core$Task$succeed(processes);
+		} else {
+			var _p1 = _p0._0;
+			var spawnRest = function (id) {
+				return A3(
+					_elm_lang$core$Time$spawnHelp,
+					router,
+					_p0._1,
+					A3(_elm_lang$core$Dict$insert, _p1, id, processes));
+			};
+			var spawnTimer = _elm_lang$core$Native_Scheduler.spawn(
+				A2(
+					_elm_lang$core$Time$setInterval,
+					_p1,
+					A2(_elm_lang$core$Platform$sendToSelf, router, _p1)));
+			return A2(_elm_lang$core$Task$andThen, spawnRest, spawnTimer);
+		}
+	});
+var _elm_lang$core$Time$addMySub = F2(
+	function (_p2, state) {
+		var _p3 = _p2;
+		var _p6 = _p3._1;
+		var _p5 = _p3._0;
+		var _p4 = A2(_elm_lang$core$Dict$get, _p5, state);
+		if (_p4.ctor === 'Nothing') {
+			return A3(
+				_elm_lang$core$Dict$insert,
+				_p5,
+				{
+					ctor: '::',
+					_0: _p6,
+					_1: {ctor: '[]'}
+				},
+				state);
+		} else {
+			return A3(
+				_elm_lang$core$Dict$insert,
+				_p5,
+				{ctor: '::', _0: _p6, _1: _p4._0},
+				state);
+		}
+	});
+var _elm_lang$core$Time$inMilliseconds = function (t) {
+	return t;
+};
+var _elm_lang$core$Time$millisecond = 1;
+var _elm_lang$core$Time$second = 1000 * _elm_lang$core$Time$millisecond;
+var _elm_lang$core$Time$minute = 60 * _elm_lang$core$Time$second;
+var _elm_lang$core$Time$hour = 60 * _elm_lang$core$Time$minute;
+var _elm_lang$core$Time$inHours = function (t) {
+	return t / _elm_lang$core$Time$hour;
+};
+var _elm_lang$core$Time$inMinutes = function (t) {
+	return t / _elm_lang$core$Time$minute;
+};
+var _elm_lang$core$Time$inSeconds = function (t) {
+	return t / _elm_lang$core$Time$second;
+};
+var _elm_lang$core$Time$now = _elm_lang$core$Native_Time.now;
+var _elm_lang$core$Time$onSelfMsg = F3(
+	function (router, interval, state) {
+		var _p7 = A2(_elm_lang$core$Dict$get, interval, state.taggers);
+		if (_p7.ctor === 'Nothing') {
+			return _elm_lang$core$Task$succeed(state);
+		} else {
+			var tellTaggers = function (time) {
+				return _elm_lang$core$Task$sequence(
+					A2(
+						_elm_lang$core$List$map,
+						function (tagger) {
+							return A2(
+								_elm_lang$core$Platform$sendToApp,
+								router,
+								tagger(time));
+						},
+						_p7._0));
+			};
+			return A2(
+				_elm_lang$core$Task$andThen,
+				function (_p8) {
+					return _elm_lang$core$Task$succeed(state);
+				},
+				A2(_elm_lang$core$Task$andThen, tellTaggers, _elm_lang$core$Time$now));
+		}
+	});
+var _elm_lang$core$Time$subscription = _elm_lang$core$Native_Platform.leaf('Time');
+var _elm_lang$core$Time$State = F2(
+	function (a, b) {
+		return {taggers: a, processes: b};
+	});
+var _elm_lang$core$Time$init = _elm_lang$core$Task$succeed(
+	A2(_elm_lang$core$Time$State, _elm_lang$core$Dict$empty, _elm_lang$core$Dict$empty));
+var _elm_lang$core$Time$onEffects = F3(
+	function (router, subs, _p9) {
+		var _p10 = _p9;
+		var rightStep = F3(
+			function (_p12, id, _p11) {
+				var _p13 = _p11;
+				return {
+					ctor: '_Tuple3',
+					_0: _p13._0,
+					_1: _p13._1,
+					_2: A2(
+						_elm_lang$core$Task$andThen,
+						function (_p14) {
+							return _p13._2;
+						},
+						_elm_lang$core$Native_Scheduler.kill(id))
+				};
+			});
+		var bothStep = F4(
+			function (interval, taggers, id, _p15) {
+				var _p16 = _p15;
+				return {
+					ctor: '_Tuple3',
+					_0: _p16._0,
+					_1: A3(_elm_lang$core$Dict$insert, interval, id, _p16._1),
+					_2: _p16._2
+				};
+			});
+		var leftStep = F3(
+			function (interval, taggers, _p17) {
+				var _p18 = _p17;
+				return {
+					ctor: '_Tuple3',
+					_0: {ctor: '::', _0: interval, _1: _p18._0},
+					_1: _p18._1,
+					_2: _p18._2
+				};
+			});
+		var newTaggers = A3(_elm_lang$core$List$foldl, _elm_lang$core$Time$addMySub, _elm_lang$core$Dict$empty, subs);
+		var _p19 = A6(
+			_elm_lang$core$Dict$merge,
+			leftStep,
+			bothStep,
+			rightStep,
+			newTaggers,
+			_p10.processes,
+			{
+				ctor: '_Tuple3',
+				_0: {ctor: '[]'},
+				_1: _elm_lang$core$Dict$empty,
+				_2: _elm_lang$core$Task$succeed(
+					{ctor: '_Tuple0'})
+			});
+		var spawnList = _p19._0;
+		var existingDict = _p19._1;
+		var killTask = _p19._2;
+		return A2(
+			_elm_lang$core$Task$andThen,
+			function (newProcesses) {
+				return _elm_lang$core$Task$succeed(
+					A2(_elm_lang$core$Time$State, newTaggers, newProcesses));
+			},
+			A2(
+				_elm_lang$core$Task$andThen,
+				function (_p20) {
+					return A3(_elm_lang$core$Time$spawnHelp, router, spawnList, existingDict);
+				},
+				killTask));
+	});
+var _elm_lang$core$Time$Every = F2(
+	function (a, b) {
+		return {ctor: 'Every', _0: a, _1: b};
+	});
+var _elm_lang$core$Time$every = F2(
+	function (interval, tagger) {
+		return _elm_lang$core$Time$subscription(
+			A2(_elm_lang$core$Time$Every, interval, tagger));
+	});
+var _elm_lang$core$Time$subMap = F2(
+	function (f, _p21) {
+		var _p22 = _p21;
+		return A2(
+			_elm_lang$core$Time$Every,
+			_p22._0,
+			function (_p23) {
+				return f(
+					_p22._1(_p23));
+			});
+	});
+_elm_lang$core$Native_Platform.effectManagers['Time'] = {pkg: 'elm-lang/core', init: _elm_lang$core$Time$init, onEffects: _elm_lang$core$Time$onEffects, onSelfMsg: _elm_lang$core$Time$onSelfMsg, tag: 'sub', subMap: _elm_lang$core$Time$subMap};
+
 var _elm_lang$core$Debug$crash = _elm_lang$core$Native_Debug.crash;
 var _elm_lang$core$Debug$log = _elm_lang$core$Native_Debug.log;
 
@@ -12924,6 +13139,41 @@ var _elm_lang$svg$Svg_Lazy$lazy3 = _elm_lang$virtual_dom$VirtualDom$lazy3;
 var _elm_lang$svg$Svg_Lazy$lazy2 = _elm_lang$virtual_dom$VirtualDom$lazy2;
 var _elm_lang$svg$Svg_Lazy$lazy = _elm_lang$virtual_dom$VirtualDom$lazy;
 
+var _user$project$Core$splitWhileHelp = F3(
+	function (f, taken, list) {
+		splitWhileHelp:
+		while (true) {
+			var _p0 = list;
+			if (_p0.ctor === '[]') {
+				return {
+					ctor: '_Tuple2',
+					_0: taken,
+					_1: {ctor: '[]'}
+				};
+			} else {
+				var _p1 = _p0._0;
+				if (f(_p1)) {
+					var _v1 = f,
+						_v2 = {ctor: '::', _0: _p1, _1: taken},
+						_v3 = _p0._1;
+					f = _v1;
+					taken = _v2;
+					list = _v3;
+					continue splitWhileHelp;
+				} else {
+					return {ctor: '_Tuple2', _0: taken, _1: list};
+				}
+			}
+		}
+	});
+var _user$project$Core$splitWhile = F2(
+	function (f, list) {
+		return A3(
+			_user$project$Core$splitWhileHelp,
+			f,
+			{ctor: '[]'},
+			list);
+	});
 var _user$project$Core_ops = _user$project$Core_ops || {};
 _user$project$Core_ops['=>'] = F2(
 	function (v0, v1) {
@@ -12952,11 +13202,54 @@ var _user$project$Msg$MouseDownOnNote = F2(
 var _user$project$Msg$NextMeasure = {ctor: 'NextMeasure'};
 var _user$project$Msg$PrevMeasure = {ctor: 'PrevMeasure'};
 var _user$project$Msg$Stop = {ctor: 'Stop'};
-var _user$project$Msg$Start = {ctor: 'Start'};
+var _user$project$Msg$Tick = function (a) {
+	return {ctor: 'Tick', _0: a};
+};
+var _user$project$Msg$Start = function (a) {
+	return {ctor: 'Start', _0: a};
+};
+var _user$project$Msg$TriggerStart = {ctor: 'TriggerStart'};
 var _user$project$Msg$PianorollEvent = function (a) {
 	return {ctor: 'PianorollEvent', _0: a};
 };
 
+var _user$project$Midi$positionToTime = F2(
+	function (timeBase, position) {
+		return _elm_lang$core$Basics$toFloat(position) * (1000.0 / (_elm_lang$core$Basics$toFloat(timeBase) * 2.0));
+	});
+var _user$project$Midi$measureToTick = function (measure) {
+	return _elm_lang$core$Basics$floor(measure * 480);
+};
+var _user$project$Midi$tickToMeasure = function (tick) {
+	return _elm_lang$core$Basics$toFloat(tick) / 480;
+};
+
+var _user$project$Model$getFutureNotes = F2(
+	function (measure, notes) {
+		var from = _user$project$Midi$measureToTick(measure);
+		return A2(
+			_elm_lang$core$List$sortBy,
+			function (_) {
+				return _.position;
+			},
+			A2(
+				_elm_lang$core$List$filter,
+				function (note) {
+					return _elm_lang$core$Native_Utils.cmp(note.position, from) > -1;
+				},
+				notes));
+	});
+var _user$project$Model$prepareFutureNotes = function (model) {
+	return function (notes) {
+		return _elm_lang$core$Native_Utils.update(
+			model,
+			{futureNotes: notes});
+	}(
+		A2(
+			_user$project$Model$getFutureNotes,
+			_elm_lang$core$Basics$toFloat(model.currentMeasure),
+			_elm_lang$core$Dict$values(model.notes)));
+};
 var _user$project$Model$updateNotes = F2(
 	function (f, model) {
 		return _elm_lang$core$Native_Utils.update(
@@ -13033,9 +13326,9 @@ var _user$project$Model$addNote = F2(
 		}(
 			_user$project$Model$genId(model));
 	});
-var _user$project$Model$Model = F5(
-	function (a, b, c, d, e) {
-		return {notes: a, currentMeasure: b, mode: c, playing: d, nextId: e};
+var _user$project$Model$Model = F7(
+	function (a, b, c, d, e, f, g) {
+		return {notes: a, currentMeasure: b, mode: c, playing: d, startTime: e, futureNotes: f, nextId: g};
 	});
 var _user$project$Model$Note = F6(
 	function (a, b, c, d, e, f) {
@@ -13063,75 +13356,189 @@ var _user$project$Model$init = A2(
 				function (id) {
 					return A6(_user$project$Model$Note, id, 60, 127, 0, 100, false);
 				},
-				A5(_user$project$Model$Model, _elm_lang$core$Dict$empty, 0, _user$project$Model$ArrowMode, false, 1)))));
+				A7(
+					_user$project$Model$Model,
+					_elm_lang$core$Dict$empty,
+					0,
+					_user$project$Model$ArrowMode,
+					false,
+					0,
+					{ctor: '[]'},
+					1)))));
 
 var _user$project$Update$subscriptions = function (model) {
-	return _elm_lang$core$Platform_Sub$none;
+	return model.playing ? A2(_elm_lang$core$Time$every, 100 * _elm_lang$core$Time$millisecond, _user$project$Msg$Tick) : _elm_lang$core$Platform_Sub$none;
 };
+var _user$project$Update$init = A2(_user$project$Core_ops['=>'], _user$project$Model$init, _elm_lang$core$Platform_Cmd$none);
+var _user$project$Update$send = _elm_lang$core$Native_Platform.outgoingPort(
+	'send',
+	function (v) {
+		return _elm_lang$core$Native_List.toArray(v).map(
+			function (v) {
+				return {
+					portId: v.portId,
+					message: _elm_lang$core$Native_List.toArray(v.message).map(
+						function (v) {
+							return v;
+						}),
+					at: v.at
+				};
+			});
+	});
+var _user$project$Update$MidiOutEvent = F3(
+	function (a, b, c) {
+		return {portId: a, message: b, at: c};
+	});
+var _user$project$Update$sendNotes = F3(
+	function (startTime, currentTime, futureNotes) {
+		var channel = 1;
+		var portId = '0';
+		var time = currentTime - startTime;
+		var timeBase = 480;
+		var _p0 = A2(
+			_user$project$Core$splitWhile,
+			function (note) {
+				return _elm_lang$core$Native_Utils.cmp(
+					A2(_user$project$Midi$positionToTime, timeBase, note.position),
+					time + 1000.0) < 0;
+			},
+			futureNotes);
+		var newNotes = _p0._0;
+		var newFutureNotes = _p0._1;
+		var cmd = _user$project$Update$send(
+			A2(
+				_elm_lang$core$List$concatMap,
+				function (_p1) {
+					var _p2 = _p1;
+					var _p4 = _p2._1;
+					var _p3 = _p2._0;
+					return {
+						ctor: '::',
+						_0: A3(
+							_user$project$Update$MidiOutEvent,
+							portId,
+							{
+								ctor: '::',
+								_0: 144 + channel,
+								_1: {
+									ctor: '::',
+									_0: _p4.note,
+									_1: {
+										ctor: '::',
+										_0: _p4.velocity,
+										_1: {ctor: '[]'}
+									}
+								}
+							},
+							_p3),
+						_1: {
+							ctor: '::',
+							_0: A3(
+								_user$project$Update$MidiOutEvent,
+								portId,
+								{
+									ctor: '::',
+									_0: 128 + channel,
+									_1: {
+										ctor: '::',
+										_0: _p4.note,
+										_1: {
+											ctor: '::',
+											_0: 0,
+											_1: {ctor: '[]'}
+										}
+									}
+								},
+								_p3 + A2(_user$project$Midi$positionToTime, timeBase, _p4.length)),
+							_1: {ctor: '[]'}
+						}
+					};
+				},
+				A2(
+					_elm_lang$core$List$map,
+					function (note) {
+						return {
+							ctor: '_Tuple2',
+							_0: A2(
+								_elm_lang$core$Basics$max,
+								0.0,
+								A2(_user$project$Midi$positionToTime, timeBase, note.position) - time),
+							_1: note
+						};
+					},
+					newNotes)));
+		return A2(_user$project$Core_ops['=>'], newFutureNotes, cmd);
+	});
 var _user$project$Update$update = F2(
 	function (msg, model) {
 		update:
 		while (true) {
-			var _p0 = msg;
-			switch (_p0.ctor) {
+			var _p5 = msg;
+			switch (_p5.ctor) {
 				case 'PianorollEvent':
-					var _p2 = _p0._0;
-					var _p1 = {ctor: '_Tuple3', _0: _p2.ctrl, _1: _p2.shift, _2: _p2.code};
-					_v1_5:
+					var _p7 = _p5._0;
+					var _p6 = {ctor: '_Tuple3', _0: _p7.ctrl, _1: _p7.shift, _2: _p7.code};
+					_v2_5:
 					do {
-						if (_p1.ctor === '_Tuple3') {
-							switch (_p1._2) {
+						if (_p6.ctor === '_Tuple3') {
+							switch (_p6._2) {
 								case 65:
-									if (_p1._0 === true) {
+									if (_p6._0 === true) {
 										return A2(
 											_user$project$Core_ops['=>'],
 											_user$project$Model$selectAllNotes(model),
 											_elm_lang$core$Platform_Cmd$none);
 									} else {
-										break _v1_5;
+										break _v2_5;
 									}
 								case 38:
-									if (_p1._1 === true) {
-										var _v2 = _user$project$Msg$MoveSelectedNotes(12),
-											_v3 = model;
-										msg = _v2;
-										model = _v3;
+									if (_p6._1 === true) {
+										var _v3 = _user$project$Msg$MoveSelectedNotes(12),
+											_v4 = model;
+										msg = _v3;
+										model = _v4;
 										continue update;
 									} else {
-										var _v4 = _user$project$Msg$MoveSelectedNotes(1),
-											_v5 = model;
-										msg = _v4;
-										model = _v5;
+										var _v5 = _user$project$Msg$MoveSelectedNotes(1),
+											_v6 = model;
+										msg = _v5;
+										model = _v6;
 										continue update;
 									}
 								case 40:
-									if (_p1._1 === true) {
-										var _v6 = _user$project$Msg$MoveSelectedNotes(-12),
-											_v7 = model;
-										msg = _v6;
-										model = _v7;
+									if (_p6._1 === true) {
+										var _v7 = _user$project$Msg$MoveSelectedNotes(-12),
+											_v8 = model;
+										msg = _v7;
+										model = _v8;
 										continue update;
 									} else {
-										var _v8 = _user$project$Msg$MoveSelectedNotes(-1),
-											_v9 = model;
-										msg = _v8;
-										model = _v9;
+										var _v9 = _user$project$Msg$MoveSelectedNotes(-1),
+											_v10 = model;
+										msg = _v9;
+										model = _v10;
 										continue update;
 									}
 								default:
-									break _v1_5;
+									break _v2_5;
 							}
 						} else {
-							break _v1_5;
+							break _v2_5;
 						}
 					} while(false);
 					return A2(_user$project$Core_ops['=>'], model, _elm_lang$core$Platform_Cmd$none);
+				case 'TriggerStart':
+					return A2(
+						_user$project$Core_ops['=>'],
+						model,
+						A2(_elm_lang$core$Task$perform, _user$project$Msg$Start, _elm_lang$core$Time$now));
 				case 'Start':
 					return A2(
 						_user$project$Core_ops['=>'],
-						_elm_lang$core$Native_Utils.update(
-							model,
-							{playing: true}),
+						_user$project$Model$prepareFutureNotes(
+							_elm_lang$core$Native_Utils.update(
+								model,
+								{playing: true, startTime: _p5._0})),
 						_elm_lang$core$Platform_Cmd$none);
 				case 'Stop':
 					return A2(
@@ -13140,6 +13547,16 @@ var _user$project$Update$update = F2(
 							model,
 							{playing: false}),
 						_elm_lang$core$Platform_Cmd$none);
+				case 'Tick':
+					var _p8 = A3(_user$project$Update$sendNotes, model.startTime, _p5._0, model.futureNotes);
+					var futureNotes = _p8._0;
+					var cmd = _p8._1;
+					return A2(
+						_user$project$Core_ops['=>'],
+						_elm_lang$core$Native_Utils.update(
+							model,
+							{futureNotes: futureNotes}),
+						cmd);
 				case 'PrevMeasure':
 					return A2(
 						_user$project$Core_ops['=>'],
@@ -13157,7 +13574,7 @@ var _user$project$Update$update = F2(
 				case 'MouseDownOnNote':
 					return A2(
 						_user$project$Core_ops['=>'],
-						A3(_user$project$Model$selectNote, _p0._1.ctrl, _p0._0, model),
+						A3(_user$project$Model$selectNote, _p5._1.ctrl, _p5._0, model),
 						_elm_lang$core$Platform_Cmd$none);
 				case 'MoveSelectedNotes':
 					return A2(
@@ -13167,7 +13584,7 @@ var _user$project$Update$update = F2(
 							function (note) {
 								return _elm_lang$core$Native_Utils.update(
 									note,
-									{note: note.note + _p0._0});
+									{note: note.note + _p5._0});
 							},
 							model),
 						_elm_lang$core$Platform_Cmd$none);
@@ -13188,13 +13605,6 @@ var _user$project$Update$update = F2(
 			}
 		}
 	});
-var _user$project$Update$init = A2(_user$project$Core_ops['=>'], _user$project$Model$init, _elm_lang$core$Platform_Cmd$none);
-var _user$project$Update$midiOut = _elm_lang$core$Native_Platform.outgoingPort(
-	'midiOut',
-	function (v) {
-		return {};
-	});
-var _user$project$Update$Output = {};
 
 var _user$project$SvgPath$h = F2(
 	function (length, s) {
@@ -13268,9 +13678,6 @@ var _user$project$PianorollView$measureToPx = function (measure) {
 	return _elm_lang$core$Basics$floor(
 		measure * (_elm_lang$core$Basics$toFloat(_user$project$PianorollView$pianorollWidthPx) / 4));
 };
-var _user$project$PianorollView$tickToMeasure = function (tick) {
-	return _elm_lang$core$Basics$toFloat(tick) / 480;
-};
 var _user$project$PianorollView$decodeMouseDown = A3(
 	_elm_lang$core$Json_Decode$map2,
 	_user$project$Msg$Mouse,
@@ -13282,7 +13689,7 @@ var _user$project$PianorollView$viewNote = F2(
 			function (measure) {
 				return measure - _elm_lang$core$Basics$toFloat(measureFrom);
 			}(
-				_user$project$PianorollView$tickToMeasure(note.position)));
+				_user$project$Midi$tickToMeasure(note.position)));
 		return A2(
 			_elm_lang$svg$Svg$rect,
 			{
@@ -13566,7 +13973,7 @@ var _user$project$View$viewPlayButton = function (playing) {
 			_1: {
 				ctor: '::',
 				_0: _elm_lang$html$Html_Events$onClick(
-					playing ? _user$project$Msg$Stop : _user$project$Msg$Start),
+					playing ? _user$project$Msg$Stop : _user$project$Msg$TriggerStart),
 				_1: {ctor: '[]'}
 			}
 		},
@@ -13650,7 +14057,7 @@ var _user$project$Main$main = _elm_lang$html$Html$program(
 var Elm = {};
 Elm['Main'] = Elm['Main'] || {};
 if (typeof _user$project$Main$main !== 'undefined') {
-    _user$project$Main$main(Elm['Main'], 'Main', {"types":{"unions":{"Msg.Msg":{"args":[],"tags":{"NextMeasure":[],"Start":[],"PianorollEvent":["Msg.Key"],"SelectPenMode":[],"MoveSelectedNotes":["Int"],"MouseDownOnNote":["Int","Msg.Mouse"],"SelectArrowMode":[],"Stop":[],"PrevMeasure":[]}}},"aliases":{"Msg.Key":{"args":[],"type":"{ ctrl : Bool, shift : Bool, code : Int }"},"Msg.Mouse":{"args":[],"type":"{ ctrl : Bool, shift : Bool }"}},"message":"Msg.Msg"},"versions":{"elm":"0.18.0"}});
+    _user$project$Main$main(Elm['Main'], 'Main', {"types":{"unions":{"Msg.Msg":{"args":[],"tags":{"NextMeasure":[],"Tick":["Time.Time"],"Start":["Time.Time"],"PianorollEvent":["Msg.Key"],"SelectPenMode":[],"MoveSelectedNotes":["Int"],"MouseDownOnNote":["Int","Msg.Mouse"],"SelectArrowMode":[],"Stop":[],"TriggerStart":[],"PrevMeasure":[]}}},"aliases":{"Msg.Key":{"args":[],"type":"{ ctrl : Bool, shift : Bool, code : Int }"},"Msg.Mouse":{"args":[],"type":"{ ctrl : Bool, shift : Bool }"},"Time.Time":{"args":[],"type":"Float"}},"message":"Msg.Msg"},"versions":{"elm":"0.18.0"}});
 }
 
 if (typeof define === "function" && define['amd'])

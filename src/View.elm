@@ -50,7 +50,7 @@ viewPlayButton playing =
             (if playing then
                 Stop
              else
-                Start
+                TriggerStart
             )
         ]
         [ text

@@ -1,6 +1,8 @@
 module Model exposing (..)
 
 import Dict exposing (Dict)
+import Time exposing (Time)
+import Midi exposing (Tick, Measure)
 
 
 type alias Model =
@@ -8,6 +10,8 @@ type alias Model =
     , currentMeasure : Int
     , mode : Mode
     , playing : Bool
+    , startTime : Time
+    , futureNotes : List Note
     , nextId : Int
     }
 
@@ -27,14 +31,6 @@ type alias Note =
     }
 
 
-type alias Tick =
-    Int
-
-
-type alias Measure =
-    Float
-
-
 genId : Model -> ( Model, Int )
 genId model =
     ( { model | nextId = model.nextId + 1 }, model.nextId )
@@ -51,7 +47,7 @@ addNote createNote model =
 
 init : Model
 init =
-    Model Dict.empty 0 ArrowMode False 1
+    Model Dict.empty 0 ArrowMode False 0 [] 1
         |> addNote (\id -> Note id 60 127 0 100 False)
         |> addNote (\id -> Note id 62 127 120 100 False)
         |> addNote (\id -> Note id 65 127 240 100 False)
@@ -103,3 +99,22 @@ updateSelectedNotes f model =
 updateNotes : (Dict Int Note -> Dict Int Note) -> Model -> Model
 updateNotes f model =
     { model | notes = f model.notes }
+
+
+prepareFutureNotes : Model -> Model
+prepareFutureNotes model =
+    model.notes
+        |> Dict.values
+        |> getFutureNotes (toFloat model.currentMeasure)
+        |> (\notes -> { model | futureNotes = notes })
+
+
+getFutureNotes : Measure -> List Note -> List Note
+getFutureNotes measure notes =
+    let
+        from =
+            Midi.measureToTick measure
+    in
+        notes
+            |> List.filter (\note -> note.position >= from)
+            |> List.sortBy .position

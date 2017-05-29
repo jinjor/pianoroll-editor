@@ -4,12 +4,24 @@
 <head>
   <meta charset="UTF-8">
   <link href="./style.css" rel="stylesheet">
+  <script src="./simple-instruments.js"></script>
   <script src="./editor.js"></script>
 </head>
 
 <body>
   <script>
+    let outputs = {};
+    SimpleInstruments.ports.forEach(port => {
+      outputs[port.id] = port;
+    });
     let app = Elm.Main.fullscreen();
-    app.ports.midiOut.subscribe(data => {});
+    app.ports.send.subscribe(events => {
+      events.forEach(e => {
+        let output = outputs[e.portId];
+        if (output) {
+          output.send(e.message, performance.now() + e.at);
+        }
+      });
+    });
   </script>
 </body>

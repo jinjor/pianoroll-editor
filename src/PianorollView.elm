@@ -1,6 +1,6 @@
 module PianorollView exposing (..)
 
-import Model exposing (Model, Note, Tick, Measure)
+import Model exposing (Model, Note)
 import Msg exposing (Msg(..), Mouse)
 import Svg as S exposing (..)
 import Svg.Attributes as SA exposing (..)
@@ -9,6 +9,7 @@ import Svg.Lazy exposing (..)
 import Set exposing (..)
 import SvgPath
 import Json.Decode as Decode exposing (Decoder)
+import Midi exposing (Tick, Measure)
 
 
 view : Model -> Svg Msg
@@ -91,7 +92,7 @@ viewNote measureFrom note =
     let
         left =
             note.position
-                |> tickToMeasure
+                |> Midi.tickToMeasure
                 |> (\measure -> measure - toFloat measureFrom)
                 |> measureToPx
     in
@@ -116,11 +117,6 @@ decodeMouseDown =
     Decode.map2 Mouse
         (Decode.field "ctrlKey" Decode.bool)
         (Decode.field "shiftKey" Decode.bool)
-
-
-tickToMeasure : Tick -> Measure
-tickToMeasure tick =
-    toFloat tick / 480
 
 
 measureToPx : Measure -> Px
