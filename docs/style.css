@@ -30,5 +30,8 @@ button {
 .toolbar-button {
   border-left: solid 1px #555;
   border-right: solid 1px #333;
-  /*margin-right: -1px;*/
+}
+
+.toolbar-button-selected {
+  background-color: #469;
 }

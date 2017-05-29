@@ -1,11 +1,14 @@
 module PianorollView exposing (..)
 
 import Model exposing (Model, Note, Tick, Measure)
-import Msg exposing (Msg)
+import Msg exposing (Msg(..), Mouse)
 import Svg as S exposing (..)
 import Svg.Attributes as SA exposing (..)
+import Svg.Events exposing (..)
+import Svg.Lazy exposing (..)
 import Set exposing (..)
 import SvgPath
+import Json.Decode as Decode exposing (Decoder)
 
 
 view : Model -> Svg Msg
@@ -76,14 +79,14 @@ viewVerticalLine color measure =
         []
 
 
-viewNotes : Int -> List Note -> Svg msg
+viewNotes : Int -> List Note -> Svg Msg
 viewNotes measureFrom notes =
     notes
-        |> List.map (viewNote measureFrom)
+        |> List.map (lazy2 viewNote measureFrom)
         |> g []
 
 
-viewNote : Int -> Note -> Svg msg
+viewNote : Int -> Note -> Svg Msg
 viewNote measureFrom note =
     let
         left =
@@ -95,16 +98,24 @@ viewNote measureFrom note =
         rect
             [ fill
                 (if note.selected then
-                    "#862"
+                    "#111"
                  else
-                    "#358"
+                    "#57a"
                 )
             , x (toString left)
             , y (toString <| noteToY note.note)
             , width "20"
             , height (toString noteHeightPx)
+            , on "mousedown" (decodeMouseDown |> Decode.map (MouseDownOnNote note.id))
             ]
             []
+
+
+decodeMouseDown : Decoder Mouse
+decodeMouseDown =
+    Decode.map2 Mouse
+        (Decode.field "ctrlKey" Decode.bool)
+        (Decode.field "shiftKey" Decode.bool)
 
 
 tickToMeasure : Tick -> Measure

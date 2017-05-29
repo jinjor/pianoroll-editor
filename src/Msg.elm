@@ -7,6 +7,16 @@ type Msg
     | Stop
     | PrevMeasure
     | NextMeasure
+    | MouseDownOnNote Int Mouse
+    | MoveSelectedNotes Int
+    | SelectArrowMode
+    | SelectPenMode
+
+
+type alias Mouse =
+    { ctrl : Bool
+    , shift : Bool
+    }
 
 
 type alias Key =

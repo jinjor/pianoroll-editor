@@ -8,6 +8,3 @@ node_modules
 
 # macOS
 .DS_Store
-
-# generated
-editor.js
