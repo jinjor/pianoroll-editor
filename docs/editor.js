@@ -13238,8 +13238,13 @@ var _user$project$Midi$tickToMeasure = F2(
 var _user$project$Midi$defaultTempo = 120.0;
 var _user$project$Midi$defaultTimeBase = 480;
 
-var _user$project$Model$getPlayingTime = function (model) {
-	return model.currentTime - model.startTime;
+var _user$project$Model$getPlayingPosition = function (model) {
+	var _p0 = model.playingState;
+	if (_p0.ctor === 'NotPlaying') {
+		return _p0._0;
+	} else {
+		return A3(_user$project$Midi$timeToTick, _user$project$Midi$defaultTimeBase, _user$project$Midi$defaultTempo, _p0._1 - _p0._0);
+	}
 };
 var _user$project$Model$getFutureNotes = F2(
 	function (measure, notes) {
@@ -13256,16 +13261,13 @@ var _user$project$Model$getFutureNotes = F2(
 				},
 				notes));
 	});
-var _user$project$Model$prepareFutureNotes = function (model) {
-	return function (notes) {
-		return _elm_lang$core$Native_Utils.update(
-			model,
-			{futureNotes: notes});
-	}(
-		A2(
-			_user$project$Model$getFutureNotes,
-			_elm_lang$core$Basics$toFloat(model.currentMeasure),
-			_elm_lang$core$Dict$values(model.notes)));
+var _user$project$Model$isPlaying = function (model) {
+	var _p1 = model.playingState;
+	if (_p1.ctor === 'Playing') {
+		return true;
+	} else {
+		return false;
+	}
 };
 var _user$project$Model$updateNotes = F2(
 	function (f, model) {
@@ -13304,7 +13306,7 @@ var _user$project$Model$selectNote = F3(
 			_user$project$Model$updateNotes,
 			_elm_lang$core$Dict$map(
 				F2(
-					function (_p0, note) {
+					function (_p2, note) {
 						return _elm_lang$core$Native_Utils.update(
 							note,
 							{
@@ -13327,30 +13329,57 @@ var _user$project$Model$genId = function (model) {
 };
 var _user$project$Model$addNote = F2(
 	function (createNote, model) {
-		return function (_p1) {
-			var _p2 = _p1;
-			var _p4 = _p2._0;
-			var _p3 = _p2._1;
+		return function (_p3) {
+			var _p4 = _p3;
+			var _p6 = _p4._0;
+			var _p5 = _p4._1;
 			return _elm_lang$core$Native_Utils.update(
-				_p4,
+				_p6,
 				{
 					notes: A3(
 						_elm_lang$core$Dict$insert,
-						_p3,
-						createNote(_p3),
-						_p4.notes)
+						_p5,
+						createNote(_p5),
+						_p6.notes)
 				});
 		}(
 			_user$project$Model$genId(model));
 	});
-var _user$project$Model$Model = F8(
-	function (a, b, c, d, e, f, g, h) {
-		return {notes: a, currentMeasure: b, mode: c, playing: d, startTime: e, currentTime: f, futureNotes: g, nextId: h};
+var _user$project$Model$Model = F5(
+	function (a, b, c, d, e) {
+		return {notes: a, currentMeasure: b, mode: c, playingState: d, nextId: e};
 	});
 var _user$project$Model$Note = F6(
 	function (a, b, c, d, e, f) {
 		return {id: a, note: b, velocity: c, position: d, length: e, selected: f};
 	});
+var _user$project$Model$Playing = F3(
+	function (a, b, c) {
+		return {ctor: 'Playing', _0: a, _1: b, _2: c};
+	});
+var _user$project$Model$startPlaying = F2(
+	function (startTime, model) {
+		var futureNotes = A2(
+			_user$project$Model$getFutureNotes,
+			_elm_lang$core$Basics$toFloat(model.currentMeasure),
+			_elm_lang$core$Dict$values(model.notes));
+		return _elm_lang$core$Native_Utils.update(
+			model,
+			{
+				playingState: A3(_user$project$Model$Playing, startTime, startTime, futureNotes)
+			});
+	});
+var _user$project$Model$NotPlaying = function (a) {
+	return {ctor: 'NotPlaying', _0: a};
+};
+var _user$project$Model$stopPlaying = function (model) {
+	return _elm_lang$core$Native_Utils.update(
+		model,
+		{
+			playingState: _user$project$Model$NotPlaying(
+				_user$project$Model$getPlayingPosition(model))
+		});
+};
 var _user$project$Model$PenMode = {ctor: 'PenMode'};
 var _user$project$Model$ArrowMode = {ctor: 'ArrowMode'};
 var _user$project$Model$init = A2(
@@ -13373,19 +13402,16 @@ var _user$project$Model$init = A2(
 				function (id) {
 					return A6(_user$project$Model$Note, id, 60, 127, 480 + 0, 100, false);
 				},
-				A8(
+				A5(
 					_user$project$Model$Model,
 					_elm_lang$core$Dict$empty,
 					0,
 					_user$project$Model$ArrowMode,
-					false,
-					0,
-					0,
-					{ctor: '[]'},
+					_user$project$Model$NotPlaying(0),
 					1)))));
 
 var _user$project$Update$subscriptions = function (model) {
-	return model.playing ? A2(_elm_lang$core$Time$every, 100 * _elm_lang$core$Time$millisecond, _user$project$Msg$Tick) : _elm_lang$core$Platform_Sub$none;
+	return _user$project$Model$isPlaying(model) ? A2(_elm_lang$core$Time$every, 100 * _elm_lang$core$Time$millisecond, _user$project$Msg$Tick) : _elm_lang$core$Platform_Sub$none;
 };
 var _user$project$Update$init = A2(_user$project$Core_ops['=>'], _user$project$Model$init, _elm_lang$core$Platform_Cmd$none);
 var _user$project$Update$send = _elm_lang$core$Native_Platform.outgoingPort(
@@ -13539,7 +13565,7 @@ var _user$project$Update$update = F2(
 										continue update;
 									}
 								case 32:
-									var _v11 = model.playing ? _user$project$Msg$Stop : _user$project$Msg$TriggerStart,
+									var _v11 = _user$project$Model$isPlaying(model) ? _user$project$Msg$Stop : _user$project$Msg$TriggerStart,
 										_v12 = model;
 									msg = _v11;
 									model = _v12;
@@ -13558,32 +13584,34 @@ var _user$project$Update$update = F2(
 						model,
 						A2(_elm_lang$core$Task$perform, _user$project$Msg$Start, _elm_lang$core$Time$now));
 				case 'Start':
-					var _p8 = _p5._0;
 					return A2(
 						_user$project$Core_ops['=>'],
-						_user$project$Model$prepareFutureNotes(
-							_elm_lang$core$Native_Utils.update(
-								model,
-								{playing: true, startTime: _p8, currentTime: _p8})),
+						A2(_user$project$Model$startPlaying, _p5._0, model),
 						_elm_lang$core$Platform_Cmd$none);
 				case 'Stop':
 					return A2(
 						_user$project$Core_ops['=>'],
-						_elm_lang$core$Native_Utils.update(
-							model,
-							{playing: false}),
+						_user$project$Model$stopPlaying(model),
 						_elm_lang$core$Platform_Cmd$none);
 				case 'Tick':
-					var _p10 = _p5._0;
-					var _p9 = A3(_user$project$Update$sendNotes, model.startTime, _p10, model.futureNotes);
-					var futureNotes = _p9._0;
-					var cmd = _p9._1;
-					return A2(
-						_user$project$Core_ops['=>'],
-						_elm_lang$core$Native_Utils.update(
-							model,
-							{currentTime: _p10, futureNotes: futureNotes}),
-						cmd);
+					var _p11 = _p5._0;
+					var _p8 = model.playingState;
+					if (_p8.ctor === 'NotPlaying') {
+						return A2(_user$project$Core_ops['=>'], model, _elm_lang$core$Platform_Cmd$none);
+					} else {
+						var _p10 = _p8._0;
+						var _p9 = A3(_user$project$Update$sendNotes, _p10, _p11, _p8._2);
+						var newFutureNotes = _p9._0;
+						var cmd = _p9._1;
+						return A2(
+							_user$project$Core_ops['=>'],
+							_elm_lang$core$Native_Utils.update(
+								model,
+								{
+									playingState: A3(_user$project$Model$Playing, _p10, _p11, newFutureNotes)
+								}),
+							cmd);
+					}
 				case 'PrevMeasure':
 					return A2(
 						_user$project$Core_ops['=>'],
@@ -13799,11 +13827,8 @@ var _user$project$PianorollView$viewVerticalLine = F2(
 			{ctor: '[]'});
 	});
 var _user$project$PianorollView$viewVerticalCurrentPositionLine = F2(
-	function (baseMeasure, time) {
-		var currentMeasure = A2(
-			_user$project$Midi$tickToMeasure,
-			_user$project$Midi$defaultTimeBase,
-			A3(_user$project$Midi$timeToTick, _user$project$Midi$defaultTimeBase, _user$project$Midi$defaultTempo, time));
+	function (baseMeasure, timeInTick) {
+		var currentMeasure = A2(_user$project$Midi$tickToMeasure, _user$project$Midi$defaultTimeBase, timeInTick);
 		return A2(
 			_user$project$PianorollView$viewVerticalLine,
 			'#66f',
@@ -13889,7 +13914,7 @@ var _user$project$PianorollView$view = function (model) {
 							_0: A2(
 								_user$project$PianorollView$viewVerticalCurrentPositionLine,
 								model.currentMeasure,
-								_user$project$Model$getPlayingTime(model)),
+								_user$project$Model$getPlayingPosition(model)),
 							_1: {
 								ctor: '::',
 								_0: A2(
@@ -13957,7 +13982,7 @@ var _user$project$View$formatTime = function (ms) {
 				_elm_lang$core$Native_Utils.chr('0'),
 				_elm_lang$core$Basics$toString(ss))));
 };
-var _user$project$View$viewTime = function (time) {
+var _user$project$View$viewTime = function (timeInTick) {
 	return A2(
 		_elm_lang$html$Html$div,
 		{
@@ -13968,7 +13993,8 @@ var _user$project$View$viewTime = function (time) {
 		{
 			ctor: '::',
 			_0: _elm_lang$html$Html$text(
-				_user$project$View$formatTime(time)),
+				_user$project$View$formatTime(
+					A3(_user$project$Midi$tickToTime, _user$project$Midi$defaultTimeBase, _user$project$Midi$defaultTempo, timeInTick))),
 			_1: {ctor: '[]'}
 		});
 };
@@ -14091,7 +14117,10 @@ var _user$project$View$viewToolbar = function (model) {
 			_0: _user$project$View$viewPrevMeasureButton,
 			_1: {
 				ctor: '::',
-				_0: A2(_elm_lang$html$Html_Lazy$lazy, _user$project$View$viewPlayButton, model.playing),
+				_0: A2(
+					_elm_lang$html$Html_Lazy$lazy,
+					_user$project$View$viewPlayButton,
+					_user$project$Model$isPlaying(model)),
 				_1: {
 					ctor: '::',
 					_0: _user$project$View$viewNextMeasureButton,
@@ -14112,7 +14141,7 @@ var _user$project$View$viewToolbar = function (model) {
 								_0: A2(
 									_elm_lang$html$Html_Lazy$lazy,
 									_user$project$View$viewTime,
-									_user$project$Model$getPlayingTime(model)),
+									_user$project$Model$getPlayingPosition(model)),
 								_1: {ctor: '[]'}
 							}
 						}

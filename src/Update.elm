@@ -1,6 +1,6 @@
 port module Update exposing (..)
 
-import Model exposing (Model, Mode(..), Note)
+import Model exposing (Model, Mode(..), Note, PlayingState(..))
 import Msg exposing (Msg(..))
 import Core exposing (..)
 import KeyCode
@@ -50,7 +50,7 @@ update msg model =
 
                 ( _, _, 32 ) ->
                     update
-                        (if model.playing then
+                        (if Model.isPlaying model then
                             Stop
                          else
                             TriggerStart
@@ -65,31 +65,29 @@ update msg model =
                 => Task.perform Start Time.now
 
         Start startTime ->
-            ({ model
-                | playing = True
-                , startTime = startTime
-                , currentTime = startTime
-             }
-                |> Model.prepareFutureNotes
-            )
+            Model.startPlaying startTime model
                 => Cmd.none
 
         Stop ->
-            { model | playing = False } => Cmd.none
+            Model.stopPlaying model => Cmd.none
 
         Tick currentTime ->
-            let
-                ( futureNotes, cmd ) =
-                    sendNotes
-                        model.startTime
-                        currentTime
-                        model.futureNotes
-            in
-                { model
-                    | currentTime = currentTime
-                    , futureNotes = futureNotes
-                }
-                    => cmd
+            case model.playingState of
+                NotPlaying _ ->
+                    model => Cmd.none
+
+                Playing startTime _ futureNotes ->
+                    let
+                        ( newFutureNotes, cmd ) =
+                            sendNotes
+                                startTime
+                                currentTime
+                                futureNotes
+                    in
+                        { model
+                            | playingState = Playing startTime currentTime newFutureNotes
+                        }
+                            => cmd
 
         PrevMeasure ->
             { model | currentMeasure = model.currentMeasure - 1 } => Cmd.none
@@ -115,7 +113,7 @@ update msg model =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    if model.playing then
+    if Model.isPlaying model then
         Time.every (100 * Time.millisecond) Tick
     else
         Sub.none

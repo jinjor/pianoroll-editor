@@ -22,7 +22,7 @@ view model =
         [ g []
             [ viewHorizotalNoteLines
             , viewVerticalMeasureLines
-            , viewVerticalCurrentPositionLine model.currentMeasure (Model.getPlayingTime model)
+            , viewVerticalCurrentPositionLine model.currentMeasure (Model.getPlayingPosition model)
             , viewNotes model.currentMeasure (Model.getNotes model)
             ]
         ]
@@ -68,12 +68,11 @@ viewVerticalMeasureLine measure =
     viewVerticalLine "#888" (toFloat measure)
 
 
-viewVerticalCurrentPositionLine : Int -> Time -> Svg msg
-viewVerticalCurrentPositionLine baseMeasure time =
+viewVerticalCurrentPositionLine : Int -> Tick -> Svg msg
+viewVerticalCurrentPositionLine baseMeasure timeInTick =
     let
         currentMeasure =
-            time
-                |> Midi.timeToTick Midi.defaultTimeBase Midi.defaultTempo
+            timeInTick
                 |> Midi.tickToMeasure Midi.defaultTimeBase
     in
         viewVerticalLine "#66f" (currentMeasure - toFloat baseMeasure)

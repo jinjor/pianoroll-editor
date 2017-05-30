@@ -12,6 +12,7 @@ import PianorollView
 import Json.Decode as Decode exposing (Decoder)
 import Core exposing (..)
 import Time exposing (Time)
+import Midi exposing (Tick)
 
 
 view : Model -> Html Msg
@@ -26,11 +27,11 @@ viewToolbar : Model -> Html Msg
 viewToolbar model =
     div [ class "toolbar" ]
         [ viewPrevMeasureButton
-        , lazy viewPlayButton model.playing
+        , lazy viewPlayButton (Model.isPlaying model)
         , viewNextMeasureButton
         , lazy arrowButton (model.mode == ArrowMode)
         , lazy penButton (model.mode == PenMode)
-        , lazy viewTime (Model.getPlayingTime model)
+        , lazy viewTime (Model.getPlayingPosition model)
         ]
 
 
@@ -96,12 +97,15 @@ penButton selected =
         ]
 
 
-viewTime : Time -> Html Msg
-viewTime time =
+viewTime : Tick -> Html Msg
+viewTime timeInTick =
     div
         [ class "toolbar-button toolbar-button-timeview"
         ]
-        [ text (formatTime time)
+        [ text
+            (formatTime <|
+                Midi.tickToTime Midi.defaultTimeBase Midi.defaultTempo timeInTick
+            )
         ]
 
 
