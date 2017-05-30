@@ -77,6 +77,7 @@ var SimpleInstruments = (function() {
       id: '#' + ("0" + i).slice(-2),
       name: 'Simple ' + ("0" + i).slice(-2),
       send: (message, at) => {
+        // currently, channel must be 0
         at = audioContext.currentTime + (at ? Math.max(at - performance.now(), 0) / 1000 : 0);
         if (message[0] === 0x80) {
           noteOff(message[1], at);

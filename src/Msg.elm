@@ -15,7 +15,6 @@ type Msg
     | MoveSelectedNotes Int
     | SelectArrowMode
     | SelectPenMode
-    | SwitchTimeView
 
 
 type alias Mouse =

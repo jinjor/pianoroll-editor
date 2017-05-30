@@ -99,8 +99,7 @@ penButton selected =
 viewTime : Time -> Html Msg
 viewTime time =
     div
-        [ class "toolbar-button"
-        , onClick SwitchTimeView
+        [ class "toolbar-button toolbar-button-timeview"
         ]
         [ text (formatTime time)
         ]
@@ -115,7 +114,7 @@ formatTime ms =
         ss =
             floor ms % 1000
     in
-        toString s ++ "." ++ toString ss
+        toString s ++ "." ++ (String.padLeft 3 '0' <| toString ss)
 
 
 viewPianoroll : Model -> Html Msg

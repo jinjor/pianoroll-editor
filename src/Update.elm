@@ -103,9 +103,6 @@ update msg model =
         SelectPenMode ->
             { model | mode = PenMode } => Cmd.none
 
-        SwitchTimeView ->
-            model => Cmd.none
-
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
@@ -137,10 +134,10 @@ sendNotes startTime currentTime futureNotes =
                 futureNotes
 
         portId =
-            "0"
+            "#01"
 
         channel =
-            1
+            0
 
         cmd =
             newNotes

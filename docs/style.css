@@ -1,12 +1,15 @@
 html, body {
   padding: 0;
   margin: 0;
+  font-family: sans-serif;
+  font-size: 12px;
 }
 
 button {
   border: none;
   background-color: inherit;
   color: inherit;
+  font-size: inherit;
 }
 
 * :focus {
@@ -34,4 +37,10 @@ button {
 
 .toolbar-button-selected {
   background-color: #469;
+}
+
+.toolbar-button-timeview {
+  width: 100px;
+  text-align: right;
+  padding-right: 10px;
 }

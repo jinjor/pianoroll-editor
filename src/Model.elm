@@ -49,10 +49,10 @@ addNote createNote model =
 init : Model
 init =
     Model Dict.empty 0 ArrowMode False 0 0 [] 1
-        |> addNote (\id -> Note id 60 127 0 100 False)
-        |> addNote (\id -> Note id 62 127 480 100 False)
-        |> addNote (\id -> Note id 65 127 960 100 False)
-        |> addNote (\id -> Note id 64 127 1440 100 False)
+        |> addNote (\id -> Note id 60 127 (480 + 0) 100 False)
+        |> addNote (\id -> Note id 62 127 (480 + 480) 100 False)
+        |> addNote (\id -> Note id 65 127 (480 + 960) 100 False)
+        |> addNote (\id -> Note id 64 127 (480 + 1440) 100 False)
 
 
 getNotes : Model -> List Note
