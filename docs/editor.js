@@ -13497,7 +13497,7 @@ var _user$project$Update$update = F2(
 				case 'PianorollEvent':
 					var _p7 = _p5._0;
 					var _p6 = {ctor: '_Tuple3', _0: _p7.ctrl, _1: _p7.shift, _2: _p7.code};
-					_v2_5:
+					_v2_6:
 					do {
 						if (_p6.ctor === '_Tuple3') {
 							switch (_p6._2) {
@@ -13508,7 +13508,7 @@ var _user$project$Update$update = F2(
 											_user$project$Model$selectAllNotes(model),
 											_elm_lang$core$Platform_Cmd$none);
 									} else {
-										break _v2_5;
+										break _v2_6;
 									}
 								case 38:
 									if (_p6._1 === true) {
@@ -13538,11 +13538,17 @@ var _user$project$Update$update = F2(
 										model = _v10;
 										continue update;
 									}
+								case 32:
+									var _v11 = model.playing ? _user$project$Msg$Stop : _user$project$Msg$TriggerStart,
+										_v12 = model;
+									msg = _v11;
+									model = _v12;
+									continue update;
 								default:
-									break _v2_5;
+									break _v2_6;
 							}
 						} else {
-							break _v2_5;
+							break _v2_6;
 						}
 					} while(false);
 					return A2(_user$project$Core_ops['=>'], model, _elm_lang$core$Platform_Cmd$none);

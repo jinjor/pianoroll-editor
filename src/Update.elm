@@ -48,6 +48,15 @@ update msg model =
                 ( _, _, 40 ) ->
                     update (MoveSelectedNotes -1) model
 
+                ( _, _, 32 ) ->
+                    update
+                        (if model.playing then
+                            Stop
+                         else
+                            TriggerStart
+                        )
+                        model
+
                 _ ->
                     model => Cmd.none
 
