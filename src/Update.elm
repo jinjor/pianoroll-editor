@@ -123,14 +123,17 @@ sendNotes : Time -> Time -> List Note -> ( List Note, Cmd Msg )
 sendNotes startTime currentTime futureNotes =
     let
         timeBase =
-            480
+            Midi.defaultTimeBase
+
+        tempo =
+            Midi.defaultTempo
 
         time =
             currentTime - startTime
 
         ( newNotes, newFutureNotes ) =
             splitWhile
-                (\note -> Midi.positionToTime timeBase note.position < time + 1000.0)
+                (\note -> Midi.tickToTime timeBase tempo note.position < time + 1000.0)
                 futureNotes
 
         portId =
@@ -143,12 +146,12 @@ sendNotes startTime currentTime futureNotes =
             newNotes
                 |> List.map
                     (\note ->
-                        ( Basics.max 0.0 (Midi.positionToTime timeBase note.position - time), note )
+                        ( Basics.max 0.0 (Midi.tickToTime timeBase tempo note.position - time), note )
                     )
                 |> List.concatMap
                     (\( after, note ) ->
                         [ MidiOutEvent portId [ 0x90 + channel, note.note, note.velocity ] after
-                        , MidiOutEvent portId [ 0x80 + channel, note.note, 0 ] (after + Midi.positionToTime timeBase note.length)
+                        , MidiOutEvent portId [ 0x80 + channel, note.note, 0 ] (after + Midi.tickToTime timeBase tempo note.length)
                         ]
                     )
                 |> send

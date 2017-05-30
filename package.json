@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "elm-live src/Main.elm --output=docs/editor.js --debug --open",
+    "dev": "elm-live src/Main.elm --output=docs/editor.js --debug --open --dir=docs",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Yosuke Torii <jinjorweb@gmail.com> (https://github.com/jinjor)",

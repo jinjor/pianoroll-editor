@@ -11,16 +11,36 @@ type alias Measure =
     Float
 
 
-tickToMeasure : Tick -> Measure
-tickToMeasure tick =
-    toFloat tick / 480
+defaultTimeBase : Int
+defaultTimeBase =
+    480
 
 
-measureToTick : Measure -> Tick
-measureToTick measure =
-    floor (measure * 480)
+defaultTempo : Float
+defaultTempo =
+    120.0
 
 
-positionToTime : Int -> Tick -> Time
-positionToTime timeBase position =
-    toFloat position * (1000.0 / (toFloat timeBase * 2.0))
+tickToMeasure : Int -> Tick -> Measure
+tickToMeasure timeBase tick =
+    toFloat tick / (toFloat timeBase * 4)
+
+
+measureToTick : Int -> Measure -> Tick
+measureToTick timeBase measure =
+    floor (measure * (toFloat timeBase * 4))
+
+
+tickToTime : Int -> Float -> Tick -> Time
+tickToTime timeBase tempo tick =
+    timePerTick timeBase tempo * toFloat tick
+
+
+timePerTick : Int -> Float -> Time
+timePerTick timeBase tempo =
+    60 / tempo / toFloat timeBase * 1000
+
+
+timeToTick : Int -> Float -> Time -> Tick
+timeToTick timeBase tempo time =
+    floor (time / timePerTick timeBase tempo)

@@ -13214,23 +13214,37 @@ var _user$project$Msg$PianorollEvent = function (a) {
 	return {ctor: 'PianorollEvent', _0: a};
 };
 
-var _user$project$Midi$positionToTime = F2(
-	function (timeBase, position) {
-		return _elm_lang$core$Basics$toFloat(position) * (1000.0 / (_elm_lang$core$Basics$toFloat(timeBase) * 2.0));
+var _user$project$Midi$timePerTick = F2(
+	function (timeBase, tempo) {
+		return ((60 / tempo) / _elm_lang$core$Basics$toFloat(timeBase)) * 1000;
 	});
-var _user$project$Midi$measureToTick = function (measure) {
-	return _elm_lang$core$Basics$floor(measure * 480);
-};
-var _user$project$Midi$tickToMeasure = function (tick) {
-	return _elm_lang$core$Basics$toFloat(tick) / 480;
-};
+var _user$project$Midi$timeToTick = F3(
+	function (timeBase, tempo, time) {
+		return _elm_lang$core$Basics$floor(
+			time / A2(_user$project$Midi$timePerTick, timeBase, tempo));
+	});
+var _user$project$Midi$tickToTime = F3(
+	function (timeBase, tempo, tick) {
+		return A2(_user$project$Midi$timePerTick, timeBase, tempo) * _elm_lang$core$Basics$toFloat(tick);
+	});
+var _user$project$Midi$measureToTick = F2(
+	function (timeBase, measure) {
+		return _elm_lang$core$Basics$floor(
+			measure * (_elm_lang$core$Basics$toFloat(timeBase) * 4));
+	});
+var _user$project$Midi$tickToMeasure = F2(
+	function (timeBase, tick) {
+		return _elm_lang$core$Basics$toFloat(tick) / (_elm_lang$core$Basics$toFloat(timeBase) * 4);
+	});
+var _user$project$Midi$defaultTempo = 120.0;
+var _user$project$Midi$defaultTimeBase = 480;
 
 var _user$project$Model$getPlayingTime = function (model) {
 	return model.currentTime - model.startTime;
 };
 var _user$project$Model$getFutureNotes = F2(
 	function (measure, notes) {
-		var from = _user$project$Midi$measureToTick(measure);
+		var from = A2(_user$project$Midi$measureToTick, _user$project$Midi$defaultTimeBase, measure);
 		return A2(
 			_elm_lang$core$List$sortBy,
 			function (_) {
@@ -13343,17 +13357,17 @@ var _user$project$Model$ArrowMode = {ctor: 'ArrowMode'};
 var _user$project$Model$init = A2(
 	_user$project$Model$addNote,
 	function (id) {
-		return A6(_user$project$Model$Note, id, 64, 127, 360, 100, false);
+		return A6(_user$project$Model$Note, id, 64, 127, 1440, 100, false);
 	},
 	A2(
 		_user$project$Model$addNote,
 		function (id) {
-			return A6(_user$project$Model$Note, id, 65, 127, 240, 100, false);
+			return A6(_user$project$Model$Note, id, 65, 127, 960, 100, false);
 		},
 		A2(
 			_user$project$Model$addNote,
 			function (id) {
-				return A6(_user$project$Model$Note, id, 62, 127, 120, 100, false);
+				return A6(_user$project$Model$Note, id, 62, 127, 480, 100, false);
 			},
 			A2(
 				_user$project$Model$addNote,
@@ -13399,12 +13413,13 @@ var _user$project$Update$sendNotes = F3(
 		var channel = 1;
 		var portId = '0';
 		var time = currentTime - startTime;
-		var timeBase = 480;
+		var tempo = _user$project$Midi$defaultTempo;
+		var timeBase = _user$project$Midi$defaultTimeBase;
 		var _p0 = A2(
 			_user$project$Core$splitWhile,
 			function (note) {
 				return _elm_lang$core$Native_Utils.cmp(
-					A2(_user$project$Midi$positionToTime, timeBase, note.position),
+					A3(_user$project$Midi$tickToTime, timeBase, tempo, note.position),
 					time + 1000.0) < 0;
 			},
 			futureNotes);
@@ -13454,7 +13469,7 @@ var _user$project$Update$sendNotes = F3(
 										}
 									}
 								},
-								_p3 + A2(_user$project$Midi$positionToTime, timeBase, _p4.length)),
+								_p3 + A3(_user$project$Midi$tickToTime, timeBase, tempo, _p4.length)),
 							_1: {ctor: '[]'}
 						}
 					};
@@ -13467,7 +13482,7 @@ var _user$project$Update$sendNotes = F3(
 							_0: A2(
 								_elm_lang$core$Basics$max,
 								0.0,
-								A2(_user$project$Midi$positionToTime, timeBase, note.position) - time),
+								A3(_user$project$Midi$tickToTime, timeBase, tempo, note.position) - time),
 							_1: note
 						};
 					},
@@ -13698,7 +13713,7 @@ var _user$project$PianorollView$viewNote = F2(
 			function (measure) {
 				return measure - _elm_lang$core$Basics$toFloat(measureFrom);
 			}(
-				_user$project$Midi$tickToMeasure(note.position)));
+				A2(_user$project$Midi$tickToMeasure, _user$project$Midi$defaultTimeBase, note.position)));
 		return A2(
 			_elm_lang$svg$Svg$rect,
 			{
@@ -13780,6 +13795,17 @@ var _user$project$PianorollView$viewVerticalLine = F2(
 			},
 			{ctor: '[]'});
 	});
+var _user$project$PianorollView$viewVerticalCurrentPositionLine = F2(
+	function (baseMeasure, time) {
+		var currentMeasure = A2(
+			_user$project$Midi$tickToMeasure,
+			_user$project$Midi$defaultTimeBase,
+			A3(_user$project$Midi$timeToTick, _user$project$Midi$defaultTimeBase, _user$project$Midi$defaultTempo, time));
+		return A2(
+			_user$project$PianorollView$viewVerticalLine,
+			'#66f',
+			currentMeasure - _elm_lang$core$Basics$toFloat(baseMeasure));
+	});
 var _user$project$PianorollView$viewVerticalMeasureLine = function (measure) {
 	return A2(
 		_user$project$PianorollView$viewVerticalLine,
@@ -13858,10 +13884,17 @@ var _user$project$PianorollView$view = function (model) {
 						_1: {
 							ctor: '::',
 							_0: A2(
-								_user$project$PianorollView$viewNotes,
+								_user$project$PianorollView$viewVerticalCurrentPositionLine,
 								model.currentMeasure,
-								_user$project$Model$getNotes(model)),
-							_1: {ctor: '[]'}
+								_user$project$Model$getPlayingTime(model)),
+							_1: {
+								ctor: '::',
+								_0: A2(
+									_user$project$PianorollView$viewNotes,
+									model.currentMeasure,
+									_user$project$Model$getNotes(model)),
+								_1: {ctor: '[]'}
+							}
 						}
 					}
 				}),

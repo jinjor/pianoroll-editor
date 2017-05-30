@@ -50,9 +50,9 @@ init : Model
 init =
     Model Dict.empty 0 ArrowMode False 0 0 [] 1
         |> addNote (\id -> Note id 60 127 0 100 False)
-        |> addNote (\id -> Note id 62 127 120 100 False)
-        |> addNote (\id -> Note id 65 127 240 100 False)
-        |> addNote (\id -> Note id 64 127 360 100 False)
+        |> addNote (\id -> Note id 62 127 480 100 False)
+        |> addNote (\id -> Note id 65 127 960 100 False)
+        |> addNote (\id -> Note id 64 127 1440 100 False)
 
 
 getNotes : Model -> List Note
@@ -114,7 +114,7 @@ getFutureNotes : Measure -> List Note -> List Note
 getFutureNotes measure notes =
     let
         from =
-            Midi.measureToTick measure
+            Midi.measureToTick Midi.defaultTimeBase measure
     in
         notes
             |> List.filter (\note -> note.position >= from)

@@ -10,6 +10,7 @@ import Set exposing (..)
 import SvgPath
 import Json.Decode as Decode exposing (Decoder)
 import Midi exposing (Tick, Measure)
+import Time exposing (Time)
 
 
 view : Model -> Svg Msg
@@ -21,6 +22,7 @@ view model =
         [ g []
             [ viewHorizotalNoteLines
             , viewVerticalMeasureLines
+            , viewVerticalCurrentPositionLine model.currentMeasure (Model.getPlayingTime model)
             , viewNotes model.currentMeasure (Model.getNotes model)
             ]
         ]
@@ -66,6 +68,17 @@ viewVerticalMeasureLine measure =
     viewVerticalLine "#888" (toFloat measure)
 
 
+viewVerticalCurrentPositionLine : Int -> Time -> Svg msg
+viewVerticalCurrentPositionLine baseMeasure time =
+    let
+        currentMeasure =
+            time
+                |> Midi.timeToTick Midi.defaultTimeBase Midi.defaultTempo
+                |> Midi.tickToMeasure Midi.defaultTimeBase
+    in
+        viewVerticalLine "#66f" (currentMeasure - toFloat baseMeasure)
+
+
 viewVerticalLine : String -> Measure -> Svg msg
 viewVerticalLine color measure =
     S.path
@@ -92,7 +105,7 @@ viewNote measureFrom note =
     let
         left =
             note.position
-                |> Midi.tickToMeasure
+                |> Midi.tickToMeasure Midi.defaultTimeBase
                 |> (\measure -> measure - toFloat measureFrom)
                 |> measureToPx
     in
