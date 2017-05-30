@@ -1,6 +1,8 @@
 module Msg exposing (..)
 
 import Time exposing (Time)
+import Core exposing (..)
+import Midi exposing (Tick)
 
 
 type Msg
@@ -15,11 +17,13 @@ type Msg
     | MoveSelectedNotes Int
     | SelectArrowMode
     | SelectPenMode
+    | SetPosition Tick
 
 
 type alias Mouse =
     { ctrl : Bool
     , shift : Bool
+    , offset : Position
     }
 
 

@@ -110,6 +110,14 @@ update msg model =
         SelectPenMode ->
             { model | mode = PenMode } => Cmd.none
 
+        SetPosition tick ->
+            case model.playingState of
+                Playing _ _ _ ->
+                    model => Cmd.none
+
+                NotPlaying _ ->
+                    { model | playingState = NotPlaying tick } => Cmd.none
+
 
 subscriptions : Model -> Sub Msg
 subscriptions model =

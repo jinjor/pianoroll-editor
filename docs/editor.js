@@ -13179,39 +13179,12 @@ _user$project$Core_ops['=>'] = F2(
 	function (v0, v1) {
 		return {ctor: '_Tuple2', _0: v0, _1: v1};
 	});
+var _user$project$Core$Position = F2(
+	function (a, b) {
+		return {x: a, y: b};
+	});
 
 var _user$project$KeyCode$a = 65;
-
-var _user$project$Msg$Mouse = F2(
-	function (a, b) {
-		return {ctrl: a, shift: b};
-	});
-var _user$project$Msg$Key = F3(
-	function (a, b, c) {
-		return {ctrl: a, shift: b, code: c};
-	});
-var _user$project$Msg$SelectPenMode = {ctor: 'SelectPenMode'};
-var _user$project$Msg$SelectArrowMode = {ctor: 'SelectArrowMode'};
-var _user$project$Msg$MoveSelectedNotes = function (a) {
-	return {ctor: 'MoveSelectedNotes', _0: a};
-};
-var _user$project$Msg$MouseDownOnNote = F2(
-	function (a, b) {
-		return {ctor: 'MouseDownOnNote', _0: a, _1: b};
-	});
-var _user$project$Msg$NextMeasure = {ctor: 'NextMeasure'};
-var _user$project$Msg$PrevMeasure = {ctor: 'PrevMeasure'};
-var _user$project$Msg$Stop = {ctor: 'Stop'};
-var _user$project$Msg$Tick = function (a) {
-	return {ctor: 'Tick', _0: a};
-};
-var _user$project$Msg$Start = function (a) {
-	return {ctor: 'Start', _0: a};
-};
-var _user$project$Msg$TriggerStart = {ctor: 'TriggerStart'};
-var _user$project$Msg$PianorollEvent = function (a) {
-	return {ctor: 'PianorollEvent', _0: a};
-};
 
 var _user$project$Midi$timePerTick = F2(
 	function (timeBase, tempo) {
@@ -13237,6 +13210,40 @@ var _user$project$Midi$tickToMeasure = F2(
 	});
 var _user$project$Midi$defaultTempo = 120.0;
 var _user$project$Midi$defaultTimeBase = 480;
+
+var _user$project$Msg$Mouse = F3(
+	function (a, b, c) {
+		return {ctrl: a, shift: b, offset: c};
+	});
+var _user$project$Msg$Key = F3(
+	function (a, b, c) {
+		return {ctrl: a, shift: b, code: c};
+	});
+var _user$project$Msg$SetPosition = function (a) {
+	return {ctor: 'SetPosition', _0: a};
+};
+var _user$project$Msg$SelectPenMode = {ctor: 'SelectPenMode'};
+var _user$project$Msg$SelectArrowMode = {ctor: 'SelectArrowMode'};
+var _user$project$Msg$MoveSelectedNotes = function (a) {
+	return {ctor: 'MoveSelectedNotes', _0: a};
+};
+var _user$project$Msg$MouseDownOnNote = F2(
+	function (a, b) {
+		return {ctor: 'MouseDownOnNote', _0: a, _1: b};
+	});
+var _user$project$Msg$NextMeasure = {ctor: 'NextMeasure'};
+var _user$project$Msg$PrevMeasure = {ctor: 'PrevMeasure'};
+var _user$project$Msg$Stop = {ctor: 'Stop'};
+var _user$project$Msg$Tick = function (a) {
+	return {ctor: 'Tick', _0: a};
+};
+var _user$project$Msg$Start = function (a) {
+	return {ctor: 'Start', _0: a};
+};
+var _user$project$Msg$TriggerStart = {ctor: 'TriggerStart'};
+var _user$project$Msg$PianorollEvent = function (a) {
+	return {ctor: 'PianorollEvent', _0: a};
+};
 
 var _user$project$Model$getPlayingPosition = function (model) {
 	var _p0 = model.playingState;
@@ -13650,13 +13657,27 @@ var _user$project$Update$update = F2(
 							model,
 							{mode: _user$project$Model$ArrowMode}),
 						_elm_lang$core$Platform_Cmd$none);
-				default:
+				case 'SelectPenMode':
 					return A2(
 						_user$project$Core_ops['=>'],
 						_elm_lang$core$Native_Utils.update(
 							model,
 							{mode: _user$project$Model$PenMode}),
 						_elm_lang$core$Platform_Cmd$none);
+				default:
+					var _p12 = model.playingState;
+					if (_p12.ctor === 'Playing') {
+						return A2(_user$project$Core_ops['=>'], model, _elm_lang$core$Platform_Cmd$none);
+					} else {
+						return A2(
+							_user$project$Core_ops['=>'],
+							_elm_lang$core$Native_Utils.update(
+								model,
+								{
+									playingState: _user$project$Model$NotPlaying(_p5._0)
+								}),
+							_elm_lang$core$Platform_Cmd$none);
+					}
 			}
 		}
 	});
@@ -13729,15 +13750,22 @@ var _user$project$PianorollView$isBlack = function (note) {
 		A2(_elm_lang$core$Basics_ops['%'], note, 12),
 		_user$project$PianorollView$blackNotes);
 };
+var _user$project$PianorollView$pxPerMeasure = (_user$project$PianorollView$pianorollWidthPx / 4) | 0;
 var _user$project$PianorollView$measureToPx = function (measure) {
 	return _elm_lang$core$Basics$floor(
-		measure * (_elm_lang$core$Basics$toFloat(_user$project$PianorollView$pianorollWidthPx) / 4));
+		measure * _elm_lang$core$Basics$toFloat(_user$project$PianorollView$pxPerMeasure));
 };
-var _user$project$PianorollView$decodeMouseDown = A3(
+var _user$project$PianorollView$decodeOffset = A3(
 	_elm_lang$core$Json_Decode$map2,
+	_user$project$Core$Position,
+	A2(_elm_lang$core$Json_Decode$field, 'offsetX', _elm_lang$core$Json_Decode$int),
+	A2(_elm_lang$core$Json_Decode$field, 'offsetY', _elm_lang$core$Json_Decode$int));
+var _user$project$PianorollView$decodeMouse = A4(
+	_elm_lang$core$Json_Decode$map3,
 	_user$project$Msg$Mouse,
 	A2(_elm_lang$core$Json_Decode$field, 'ctrlKey', _elm_lang$core$Json_Decode$bool),
-	A2(_elm_lang$core$Json_Decode$field, 'shiftKey', _elm_lang$core$Json_Decode$bool));
+	A2(_elm_lang$core$Json_Decode$field, 'shiftKey', _elm_lang$core$Json_Decode$bool),
+	_user$project$PianorollView$decodeOffset);
 var _user$project$PianorollView$viewNote = F2(
 	function (measureFrom, note) {
 		var left = _user$project$PianorollView$measureToPx(
@@ -13775,7 +13803,7 @@ var _user$project$PianorollView$viewNote = F2(
 										A2(
 											_elm_lang$core$Json_Decode$map,
 											_user$project$Msg$MouseDownOnNote(note.id),
-											_user$project$PianorollView$decodeMouseDown)),
+											_user$project$PianorollView$decodeMouse)),
 									_1: {ctor: '[]'}
 								}
 							}
@@ -13895,7 +13923,23 @@ var _user$project$PianorollView$view = function (model) {
 				ctor: '::',
 				_0: _elm_lang$svg$Svg_Attributes$height(
 					_elm_lang$core$Basics$toString(_user$project$PianorollView$pianorollHeightPx)),
-				_1: {ctor: '[]'}
+				_1: {
+					ctor: '::',
+					_0: A2(
+						_elm_lang$svg$Svg_Events$on,
+						'click',
+						A2(
+							_elm_lang$core$Json_Decode$map,
+							function (mouse) {
+								return _user$project$Msg$SetPosition(
+									A2(
+										_user$project$Midi$measureToTick,
+										_user$project$Midi$defaultTimeBase,
+										(_elm_lang$core$Basics$toFloat(mouse.offset.x) / _elm_lang$core$Basics$toFloat(_user$project$PianorollView$pxPerMeasure)) + _elm_lang$core$Basics$toFloat(model.currentMeasure)));
+							},
+							_user$project$PianorollView$decodeMouse)),
+					_1: {ctor: '[]'}
+				}
 			}
 		},
 		{
@@ -14171,7 +14215,7 @@ var _user$project$Main$main = _elm_lang$html$Html$program(
 var Elm = {};
 Elm['Main'] = Elm['Main'] || {};
 if (typeof _user$project$Main$main !== 'undefined') {
-    _user$project$Main$main(Elm['Main'], 'Main', {"types":{"unions":{"Msg.Msg":{"args":[],"tags":{"NextMeasure":[],"Tick":["Time.Time"],"Start":["Time.Time"],"PianorollEvent":["Msg.Key"],"SelectPenMode":[],"MoveSelectedNotes":["Int"],"MouseDownOnNote":["Int","Msg.Mouse"],"SelectArrowMode":[],"Stop":[],"TriggerStart":[],"PrevMeasure":[]}}},"aliases":{"Msg.Key":{"args":[],"type":"{ ctrl : Bool, shift : Bool, code : Int }"},"Msg.Mouse":{"args":[],"type":"{ ctrl : Bool, shift : Bool }"},"Time.Time":{"args":[],"type":"Float"}},"message":"Msg.Msg"},"versions":{"elm":"0.18.0"}});
+    _user$project$Main$main(Elm['Main'], 'Main', {"types":{"unions":{"Msg.Msg":{"args":[],"tags":{"NextMeasure":[],"Tick":["Time.Time"],"Start":["Time.Time"],"PianorollEvent":["Msg.Key"],"SelectPenMode":[],"MoveSelectedNotes":["Int"],"MouseDownOnNote":["Int","Msg.Mouse"],"SelectArrowMode":[],"Stop":[],"TriggerStart":[],"SetPosition":["Midi.Tick"],"PrevMeasure":[]}}},"aliases":{"Core.Position":{"args":[],"type":"{ x : Int, y : Int }"},"Midi.Tick":{"args":[],"type":"Int"},"Msg.Key":{"args":[],"type":"{ ctrl : Bool, shift : Bool, code : Int }"},"Msg.Mouse":{"args":[],"type":"{ ctrl : Bool, shift : Bool, offset : Core.Position }"},"Time.Time":{"args":[],"type":"Float"}},"message":"Msg.Msg"},"versions":{"elm":"0.18.0"}});
 }
 
 if (typeof define === "function" && define['amd'])

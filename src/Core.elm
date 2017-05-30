@@ -1,5 +1,17 @@
 module Core exposing (..)
 
+-- POSITION
+
+
+type alias Position =
+    { x : Int
+    , y : Int
+    }
+
+
+
+-- TUPLE
+
 
 (=>) : a -> b -> ( a, b )
 (=>) =

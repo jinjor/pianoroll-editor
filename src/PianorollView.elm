@@ -11,6 +11,7 @@ import SvgPath
 import Json.Decode as Decode exposing (Decoder)
 import Midi exposing (Tick, Measure)
 import Time exposing (Time)
+import Core exposing (..)
 
 
 view : Model -> Svg Msg
@@ -18,6 +19,16 @@ view model =
     svg
         [ width (toString pianorollWidthPx)
         , height (toString pianorollHeightPx)
+        , on "click"
+            (decodeMouse
+                |> Decode.map
+                    (\mouse ->
+                        SetPosition
+                            ((toFloat mouse.offset.x / toFloat pxPerMeasure + toFloat model.currentMeasure)
+                                |> Midi.measureToTick Midi.defaultTimeBase
+                            )
+                    )
+            )
         ]
         [ g []
             [ viewHorizotalNoteLines
@@ -119,23 +130,36 @@ viewNote measureFrom note =
             , y (toString <| noteToY note.note)
             , width "20"
             , height (toString noteHeightPx)
-            , on "mousedown" (decodeMouseDown |> Decode.map (MouseDownOnNote note.id))
+            , on "mousedown" (decodeMouse |> Decode.map (MouseDownOnNote note.id))
             ]
             []
 
 
-decodeMouseDown : Decoder Mouse
-decodeMouseDown =
-    Decode.map2 Mouse
+decodeMouse : Decoder Mouse
+decodeMouse =
+    Decode.map3 Mouse
         (Decode.field "ctrlKey" Decode.bool)
         (Decode.field "shiftKey" Decode.bool)
+        decodeOffset
+
+
+decodeOffset : Decoder Position
+decodeOffset =
+    Decode.map2 Position
+        (Decode.field "offsetX" Decode.int)
+        (Decode.field "offsetY" Decode.int)
 
 
 measureToPx : Measure -> Px
 measureToPx measure =
     measure
-        * (toFloat pianorollWidthPx / 4)
+        * (toFloat pxPerMeasure)
         |> floor
+
+
+pxPerMeasure : Int
+pxPerMeasure =
+    pianorollWidthPx // 4
 
 
 isBlack : Int -> Bool
