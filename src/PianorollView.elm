@@ -19,16 +19,7 @@ view model =
     svg
         [ width (toString pianorollWidthPx)
         , height (toString pianorollHeightPx)
-        , on "click"
-            (decodeMouse
-                |> Decode.map
-                    (\mouse ->
-                        SetPosition
-                            ((toFloat mouse.offset.x / toFloat pxPerMeasure + toFloat model.currentMeasure)
-                                |> Midi.measureToTick Midi.defaultTimeBase
-                            )
-                    )
-            )
+        , on "click" (Decode.map (toSetPositionMsg 0.25 model.currentMeasure) decodeMouse)
         ]
         [ g []
             [ viewHorizotalNoteLines
@@ -37,6 +28,20 @@ view model =
             , viewNotes model.currentMeasure (Model.getNotes model)
             ]
         ]
+
+
+toSetPositionMsg : Measure -> Int -> Mouse -> Msg
+toSetPositionMsg quantizeUnit currentMeasure mouse =
+    SetPosition
+        ((toFloat mouse.offset.x / toFloat pxPerMeasure + toFloat currentMeasure)
+            |> quantizeMeasure quantizeUnit
+            |> Midi.measureToTick Midi.defaultTimeBase
+        )
+
+
+quantizeMeasure : Measure -> Measure -> Measure
+quantizeMeasure quantizeUnit measure =
+    toFloat (round (measure / quantizeUnit)) * quantizeUnit
 
 
 type alias Px =

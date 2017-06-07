@@ -13912,6 +13912,22 @@ var _user$project$PianorollView$viewHorizotalNoteLines = A2(
 		_elm_lang$core$List$map,
 		_user$project$PianorollView$viewHorizotalNoteLine,
 		A2(_elm_lang$core$List$range, 0, 120)));
+var _user$project$PianorollView$quantizeMeasure = F2(
+	function (quantizeUnit, measure) {
+		return _elm_lang$core$Basics$toFloat(
+			_elm_lang$core$Basics$round(measure / quantizeUnit)) * quantizeUnit;
+	});
+var _user$project$PianorollView$toSetPositionMsg = F3(
+	function (quantizeUnit, currentMeasure, mouse) {
+		return _user$project$Msg$SetPosition(
+			A2(
+				_user$project$Midi$measureToTick,
+				_user$project$Midi$defaultTimeBase,
+				A2(
+					_user$project$PianorollView$quantizeMeasure,
+					quantizeUnit,
+					(_elm_lang$core$Basics$toFloat(mouse.offset.x) / _elm_lang$core$Basics$toFloat(_user$project$PianorollView$pxPerMeasure)) + _elm_lang$core$Basics$toFloat(currentMeasure))));
+	});
 var _user$project$PianorollView$view = function (model) {
 	return A2(
 		_elm_lang$svg$Svg$svg,
@@ -13930,13 +13946,7 @@ var _user$project$PianorollView$view = function (model) {
 						'click',
 						A2(
 							_elm_lang$core$Json_Decode$map,
-							function (mouse) {
-								return _user$project$Msg$SetPosition(
-									A2(
-										_user$project$Midi$measureToTick,
-										_user$project$Midi$defaultTimeBase,
-										(_elm_lang$core$Basics$toFloat(mouse.offset.x) / _elm_lang$core$Basics$toFloat(_user$project$PianorollView$pxPerMeasure)) + _elm_lang$core$Basics$toFloat(model.currentMeasure)));
-							},
+							A2(_user$project$PianorollView$toSetPositionMsg, 0.25, model.currentMeasure),
 							_user$project$PianorollView$decodeMouse)),
 					_1: {ctor: '[]'}
 				}
