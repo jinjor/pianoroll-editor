@@ -5554,7 +5554,7 @@ var elm$time$Time$every = F2(
 			A2(elm$time$Time$Every, interval, tagger));
 	});
 var author$project$Update$subscriptions = function (model) {
-	return author$project$Model$isPlaying(model) ? A2(elm$time$Time$every, 100 * 1000, author$project$Msg$Tick) : elm$core$Platform$Sub$none;
+	return author$project$Model$isPlaying(model) ? A2(elm$time$Time$every, 100, author$project$Msg$Tick) : elm$core$Platform$Sub$none;
 };
 var author$project$Model$PenMode = {$: 'PenMode'};
 var author$project$Model$Playing = F3(

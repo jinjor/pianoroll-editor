@@ -123,7 +123,7 @@ update msg model =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     if Model.isPlaying model then
-        Time.every (100 * 1000) Tick
+        Time.every 100 Tick
 
     else
         Sub.none
