@@ -1,15 +1,15 @@
 module Msg exposing (..)
 
-import Time exposing (Time)
 import Core exposing (..)
 import Midi exposing (Tick)
+import Time exposing (Posix)
 
 
 type Msg
     = PianorollEvent Key
     | TriggerStart
-    | Start Time
-    | Tick Time
+    | Start Posix
+    | Tick Posix
     | Stop
     | PrevMeasure
     | NextMeasure

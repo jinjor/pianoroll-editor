@@ -1,18 +1,17 @@
 module View exposing (..)
 
-import Model exposing (Model, Mode(..))
-import Msg exposing (Msg(..), Key)
+import Core exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Html.Lazy exposing (..)
+import Json.Decode as Decode exposing (Decoder)
+import Midi exposing (Tick)
+import Model exposing (Mode(..), Model)
+import Msg exposing (Key, Msg(..))
+import PianorollView
 import Svg as S
 import Svg.Attributes as SA
-import PianorollView
-import Json.Decode as Decode exposing (Decoder)
-import Core exposing (..)
-import Time exposing (Time)
-import Midi exposing (Tick)
 
 
 view : Model -> Html Msg
@@ -52,6 +51,7 @@ viewPlayButton playing =
         , onClick
             (if playing then
                 Stop
+
              else
                 TriggerStart
             )
@@ -59,6 +59,7 @@ viewPlayButton playing =
         [ text
             (if playing then
                 "停止"
+
              else
                 "再生"
             )
@@ -79,7 +80,7 @@ arrowButton : Bool -> Html Msg
 arrowButton selected =
     button
         [ class "toolbar-button"
-        , classList [ "toolbar-button-selected" => selected ]
+        , classList [ ( "toolbar-button-selected", selected ) ]
         , onClick SelectArrowMode
         ]
         [ text "矢"
@@ -90,7 +91,7 @@ penButton : Bool -> Html Msg
 penButton selected =
     button
         [ class "toolbar-button"
-        , classList [ "toolbar-button-selected" => selected ]
+        , classList [ ( "toolbar-button-selected", selected ) ]
         , onClick SelectPenMode
         ]
         [ text "筆"
@@ -109,16 +110,16 @@ viewTime timeInTick =
         ]
 
 
-formatTime : Time -> String
+formatTime : Float -> String
 formatTime ms =
     let
         s =
             floor ms // 1000
 
         ss =
-            floor ms % 1000
+            remainderBy 1000 (floor ms)
     in
-        toString s ++ "." ++ (String.padLeft 3 '0' <| toString ss)
+    String.fromInt s ++ "." ++ (String.padLeft 3 '0' <| String.fromInt ss)
 
 
 viewPianoroll : Model -> Html Msg
@@ -126,10 +127,18 @@ viewPianoroll model =
     div
         [ class "pianoroll-container"
         , tabindex 1
-        , onWithOptions
+        , custom
             "keydown"
-            { defaultOptions | preventDefault = True, stopPropagation = True }
-            (decodeKeyDown |> Decode.map PianorollEvent)
+            (decodeKeyDown
+                |> Decode.map PianorollEvent
+                |> Decode.map
+                    (\msg ->
+                        { preventDefault = True
+                        , stopPropagation = True
+                        , message = msg
+                        }
+                    )
+            )
         ]
         [ PianorollView.view model
         ]

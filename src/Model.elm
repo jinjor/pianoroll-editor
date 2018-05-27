@@ -1,8 +1,9 @@
 module Model exposing (..)
 
+import Core exposing (..)
 import Dict exposing (Dict)
-import Time exposing (Time)
-import Midi exposing (Tick, Measure)
+import Midi exposing (Measure, Tick)
+import Time exposing (Posix)
 
 
 type alias Model =
@@ -16,7 +17,7 @@ type alias Model =
 
 type PlayingState
     = NotPlaying Tick
-    | Playing Time Time (List Note)
+    | Playing Posix Posix (List Note)
 
 
 type Mode
@@ -43,8 +44,8 @@ addNote : (Int -> Note) -> Model -> Model
 addNote createNote model =
     model
         |> genId
-        |> (\( model, id ) ->
-                { model | notes = Dict.insert id (createNote id) model.notes }
+        |> (\( model_, id ) ->
+                { model_ | notes = Dict.insert id (createNote id) model_.notes }
            )
 
 
@@ -93,6 +94,7 @@ updateSelectedNotes f model =
                 (\id note ->
                     if note.selected then
                         f note
+
                     else
                         note
                 )
@@ -104,7 +106,7 @@ updateNotes f model =
     { model | notes = f model.notes }
 
 
-startPlaying : Time -> Model -> Model
+startPlaying : Posix -> Model -> Model
 startPlaying startTime model =
     let
         futureNotes =
@@ -112,9 +114,9 @@ startPlaying startTime model =
                 |> Dict.values
                 |> getFutureNotes (toFloat model.currentMeasure)
     in
-        { model
-            | playingState = Playing startTime startTime futureNotes
-        }
+    { model
+        | playingState = Playing startTime startTime futureNotes
+    }
 
 
 isPlaying : Model -> Bool
@@ -140,9 +142,9 @@ getFutureNotes measure notes =
         from =
             Midi.measureToTick Midi.defaultTimeBase measure
     in
-        notes
-            |> List.filter (\note -> note.position >= from)
-            |> List.sortBy .position
+    notes
+        |> List.filter (\note -> note.position >= from)
+        |> List.sortBy .position
 
 
 getPlayingPosition : Model -> Tick
@@ -152,4 +154,7 @@ getPlayingPosition model =
             tick
 
         Playing startTime currentTime _ ->
-            Midi.timeToTick Midi.defaultTimeBase Midi.defaultTempo (currentTime - startTime)
+            Midi.timeToTick
+                Midi.defaultTimeBase
+                Midi.defaultTempo
+                (diffMillis startTime currentTime)

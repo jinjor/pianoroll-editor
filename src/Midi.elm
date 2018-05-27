@@ -1,7 +1,5 @@
 module Midi exposing (..)
 
-import Time exposing (Time)
-
 
 type alias Tick =
     Int
@@ -31,16 +29,16 @@ measureToTick timeBase measure =
     floor (measure * (toFloat timeBase * 4))
 
 
-tickToTime : Int -> Float -> Tick -> Time
+tickToTime : Int -> Float -> Tick -> Float
 tickToTime timeBase tempo tick =
     timePerTick timeBase tempo * toFloat tick
 
 
-timePerTick : Int -> Float -> Time
+timePerTick : Int -> Float -> Float
 timePerTick timeBase tempo =
     60 / tempo / toFloat timeBase * 1000
 
 
-timeToTick : Int -> Float -> Time -> Tick
+timeToTick : Int -> Float -> Float -> Tick
 timeToTick timeBase tempo time =
     floor (time / timePerTick timeBase tempo)

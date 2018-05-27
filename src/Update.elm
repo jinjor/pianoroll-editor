@@ -1,12 +1,12 @@
 port module Update exposing (..)
 
-import Model exposing (Model, Mode(..), Note, PlayingState(..))
-import Msg exposing (Msg(..))
 import Core exposing (..)
 import KeyCode
-import Time exposing (Time)
 import Midi
+import Model exposing (Mode(..), Model, Note, PlayingState(..))
+import Msg exposing (Msg(..))
 import Task
+import Time exposing (Posix)
 
 
 port send : List MidiOutEvent -> Cmd msg
@@ -19,13 +19,13 @@ type alias MidiMessage =
 type alias MidiOutEvent =
     { portId : String
     , message : MidiMessage
-    , at : Time
+    , at : Float
     }
 
 
 init : ( Model, Cmd Msg )
 init =
-    Model.init => Cmd.none
+    ( Model.init, Cmd.none )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -34,7 +34,7 @@ update msg model =
         PianorollEvent key ->
             case ( key.ctrl, key.shift, key.code ) of
                 ( True, _, 65 ) ->
-                    Model.selectAllNotes model => Cmd.none
+                    ( Model.selectAllNotes model, Cmd.none )
 
                 ( _, True, 38 ) ->
                     update (MoveSelectedNotes 12) model
@@ -52,29 +52,28 @@ update msg model =
                     update
                         (if Model.isPlaying model then
                             Stop
+
                          else
                             TriggerStart
                         )
                         model
 
                 _ ->
-                    model => Cmd.none
+                    ( model, Cmd.none )
 
         TriggerStart ->
-            model
-                => Task.perform Start Time.now
+            ( model, Task.perform Start Time.now )
 
         Start startTime ->
-            Model.startPlaying startTime model
-                => Cmd.none
+            ( Model.startPlaying startTime model, Cmd.none )
 
         Stop ->
-            Model.stopPlaying model => Cmd.none
+            ( Model.stopPlaying model, Cmd.none )
 
         Tick currentTime ->
             case model.playingState of
                 NotPlaying _ ->
-                    model => Cmd.none
+                    ( model, Cmd.none )
 
                 Playing startTime _ futureNotes ->
                     let
@@ -84,45 +83,48 @@ update msg model =
                                 currentTime
                                 futureNotes
                     in
-                        { model
-                            | playingState = Playing startTime currentTime newFutureNotes
-                        }
-                            => cmd
+                    ( { model
+                        | playingState = Playing startTime currentTime newFutureNotes
+                      }
+                    , cmd
+                    )
 
         PrevMeasure ->
-            { model | currentMeasure = model.currentMeasure - 1 } => Cmd.none
+            ( { model | currentMeasure = model.currentMeasure - 1 }, Cmd.none )
 
         NextMeasure ->
-            { model | currentMeasure = model.currentMeasure + 1 } => Cmd.none
+            ( { model | currentMeasure = model.currentMeasure + 1 }, Cmd.none )
 
         MouseDownOnNote id mouse ->
-            Model.selectNote mouse.ctrl id model => Cmd.none
+            ( Model.selectNote mouse.ctrl id model, Cmd.none )
 
         MoveSelectedNotes amount ->
-            Model.updateSelectedNotes
+            ( Model.updateSelectedNotes
                 (\note -> { note | note = note.note + amount })
                 model
-                => Cmd.none
+            , Cmd.none
+            )
 
         SelectArrowMode ->
-            { model | mode = ArrowMode } => Cmd.none
+            ( { model | mode = ArrowMode }, Cmd.none )
 
         SelectPenMode ->
-            { model | mode = PenMode } => Cmd.none
+            ( { model | mode = PenMode }, Cmd.none )
 
         SetPosition tick ->
             case model.playingState of
                 Playing _ _ _ ->
-                    model => Cmd.none
+                    ( model, Cmd.none )
 
                 NotPlaying _ ->
-                    { model | playingState = NotPlaying tick } => Cmd.none
+                    ( { model | playingState = NotPlaying tick }, Cmd.none )
 
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
     if Model.isPlaying model then
-        Time.every (100 * Time.millisecond) Tick
+        Time.every (100 * 1000) Tick
+
     else
         Sub.none
 
@@ -131,7 +133,7 @@ subscriptions model =
 -- LOGIC & EFFECTS
 
 
-sendNotes : Time -> Time -> List Note -> ( List Note, Cmd Msg )
+sendNotes : Posix -> Posix -> List Note -> ( List Note, Cmd Msg )
 sendNotes startTime currentTime futureNotes =
     let
         timeBase =
@@ -141,11 +143,13 @@ sendNotes startTime currentTime futureNotes =
             Midi.defaultTempo
 
         time =
-            currentTime - startTime
+            diffMillis startTime currentTime
 
         ( newNotes, newFutureNotes ) =
             splitWhile
-                (\note -> Midi.tickToTime timeBase tempo note.position < time + 1000.0)
+                (\note ->
+                    Midi.tickToTime timeBase tempo note.position < time + 1000.0
+                )
                 futureNotes
 
         portId =
@@ -162,10 +166,16 @@ sendNotes startTime currentTime futureNotes =
                     )
                 |> List.concatMap
                     (\( after, note ) ->
-                        [ MidiOutEvent portId [ 0x90 + channel, note.note, note.velocity ] after
-                        , MidiOutEvent portId [ 0x80 + channel, note.note, 0 ] (after + Midi.tickToTime timeBase tempo note.length)
+                        [ MidiOutEvent
+                            portId
+                            [ 0x90 + channel, note.note, note.velocity ]
+                            after
+                        , MidiOutEvent
+                            portId
+                            [ 0x80 + channel, note.note, 0 ]
+                            (after + Midi.tickToTime timeBase tempo note.length)
                         ]
                     )
                 |> send
     in
-        newFutureNotes => cmd
+    ( newFutureNotes, cmd )

@@ -1,24 +1,23 @@
 module PianorollView exposing (..)
 
+import Core exposing (..)
+import Json.Decode as Decode exposing (Decoder)
+import Midi exposing (Measure, Tick)
 import Model exposing (Model, Note)
-import Msg exposing (Msg(..), Mouse)
+import Msg exposing (Mouse, Msg(..))
+import Set exposing (..)
 import Svg as S exposing (..)
 import Svg.Attributes as SA exposing (..)
 import Svg.Events exposing (..)
 import Svg.Lazy exposing (..)
-import Set exposing (..)
 import SvgPath
-import Json.Decode as Decode exposing (Decoder)
-import Midi exposing (Tick, Measure)
-import Time exposing (Time)
-import Core exposing (..)
 
 
 view : Model -> Svg Msg
 view model =
     svg
-        [ width (toString pianorollWidthPx)
-        , height (toString pianorollHeightPx)
+        [ width (String.fromInt pianorollWidthPx)
+        , height (String.fromInt pianorollHeightPx)
         , on "click" (Decode.map (toSetPositionMsg 0.25 model.currentMeasure) decodeMouse)
         ]
         [ g []
@@ -61,13 +60,14 @@ viewHorizotalNoteLine note =
         [ fill
             (if isBlack note then
                 "#ddd"
+
              else
                 "#fff"
             )
         , x "0"
-        , y (toString <| noteToY note)
+        , y (String.fromInt <| noteToY note)
         , width "800"
-        , height (toString noteHeightPx)
+        , height (String.fromInt noteHeightPx)
         ]
         []
 
@@ -91,7 +91,7 @@ viewVerticalCurrentPositionLine baseMeasure timeInTick =
             timeInTick
                 |> Midi.tickToMeasure Midi.defaultTimeBase
     in
-        viewVerticalLine "#66f" (currentMeasure - toFloat baseMeasure)
+    viewVerticalLine "#66f" (currentMeasure - toFloat baseMeasure)
 
 
 viewVerticalLine : String -> Measure -> Svg msg
@@ -103,7 +103,7 @@ viewVerticalLine color measure =
                 |> SvgPath.v pianorollHeightPx
             )
         , width "800"
-        , height (toString noteHeightPx)
+        , height (String.fromInt noteHeightPx)
         ]
         []
 
@@ -124,20 +124,21 @@ viewNote measureFrom note =
                 |> (\measure -> measure - toFloat measureFrom)
                 |> measureToPx
     in
-        rect
-            [ fill
-                (if note.selected then
-                    "#111"
-                 else
-                    "#57a"
-                )
-            , x (toString left)
-            , y (toString <| noteToY note.note)
-            , width "20"
-            , height (toString noteHeightPx)
-            , on "mousedown" (decodeMouse |> Decode.map (MouseDownOnNote note.id))
-            ]
-            []
+    rect
+        [ fill
+            (if note.selected then
+                "#111"
+
+             else
+                "#57a"
+            )
+        , x (String.fromInt left)
+        , y (String.fromInt <| noteToY note.note)
+        , width "20"
+        , height (String.fromInt noteHeightPx)
+        , on "mousedown" (decodeMouse |> Decode.map (MouseDownOnNote note.id))
+        ]
+        []
 
 
 decodeMouse : Decoder Mouse
@@ -158,7 +159,7 @@ decodeOffset =
 measureToPx : Measure -> Px
 measureToPx measure =
     measure
-        * (toFloat pxPerMeasure)
+        * toFloat pxPerMeasure
         |> floor
 
 
@@ -169,7 +170,7 @@ pxPerMeasure =
 
 isBlack : Int -> Bool
 isBlack note =
-    Set.member (note % 12) blackNotes
+    Set.member (remainderBy 12 note) blackNotes
 
 
 blackNotes : Set Int
