@@ -10,14 +10,14 @@
 
 <body>
   <script>
-    let outputs = {};
+    const outputs = {};
     SimpleInstruments.ports.forEach(port => {
       outputs[port.id] = port;
     });
-    let app = Elm.Main.fullscreen();
+    const app = Elm.Main.embed(document.body);
     app.ports.send.subscribe(events => {
       events.forEach(e => {
-        let output = outputs[e.portId];
+        const output = outputs[e.portId];
         if (output) {
           output.send(e.message, performance.now() + e.at);
         }
